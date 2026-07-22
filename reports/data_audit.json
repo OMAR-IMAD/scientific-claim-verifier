@@ -1,0 +1,114 @@
+{
+  "label_mapping": {
+    "0": "entailment",
+    "1": "neutral",
+    "2": "contradiction"
+  },
+  "datasets": {
+    "train": {
+      "file": "data\\raw\\multinli_train.csv",
+      "rows": 392702,
+      "label_counts": {
+        "0": 130899,
+        "1": 130900,
+        "2": 130903
+      },
+      "genre_counts": {
+        "fiction": 77348,
+        "government": 77350,
+        "slate": 77306,
+        "telephone": 83348,
+        "travel": 77350
+      },
+      "missing": {
+        "genre": 0,
+        "hypothesis": 40,
+        "label": 0,
+        "pairID": 0,
+        "premise": 0
+      },
+      "invalid_labels": [],
+      "exact_triplet_duplicates": 22,
+      "premise_words": {
+        "mean": 19.811,
+        "p95": 44.0,
+        "max": 382
+      },
+      "hypothesis_words": {
+        "mean": 9.973,
+        "p95": 18.0,
+        "max": 69
+      }
+    },
+    "validation_matched": {
+      "file": "data\\raw\\multinli_validation_matched.csv",
+      "rows": 9815,
+      "label_counts": {
+        "0": 3479,
+        "1": 3123,
+        "2": 3213
+      },
+      "genre_counts": {
+        "fiction": 1973,
+        "government": 1945,
+        "slate": 1955,
+        "telephone": 1966,
+        "travel": 1976
+      },
+      "missing": {
+        "genre": 0,
+        "hypothesis": 0,
+        "label": 0,
+        "pairID": 0,
+        "premise": 0
+      },
+      "invalid_labels": [],
+      "exact_triplet_duplicates": 0,
+      "premise_words": {
+        "mean": 19.2661,
+        "p95": 43.3,
+        "max": 196
+      },
+      "hypothesis_words": {
+        "mean": 9.9164,
+        "p95": 17.0,
+        "max": 46
+      }
+    },
+    "validation_mismatched": {
+      "file": "data\\raw\\multinli_validation_mismatched.csv",
+      "rows": 9832,
+      "label_counts": {
+        "0": 3463,
+        "1": 3129,
+        "2": 3240
+      },
+      "genre_counts": {
+        "facetoface": 1974,
+        "letters": 1977,
+        "nineeleven": 1974,
+        "oup": 1961,
+        "verbatim": 1946
+      },
+      "missing": {
+        "genre": 0,
+        "hypothesis": 0,
+        "label": 0,
+        "pairID": 0,
+        "premise": 0
+      },
+      "invalid_labels": [],
+      "exact_triplet_duplicates": 2,
+      "premise_words": {
+        "mean": 19.6422,
+        "p95": 42.0,
+        "max": 129
+      },
+      "hypothesis_words": {
+        "mean": 10.8263,
+        "p95": 19.0,
+        "max": 53
+      }
+    }
+  }
+}

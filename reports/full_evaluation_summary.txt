@@ -1,0 +1,47 @@
+Scientific Claim Verifier
+Full Official Validation Evaluation
+============================================================
+
+validation_matched
+------------------------------------------------------------
+Rows: 9815
+Accuracy: 74.58%
+Macro Precision: 74.38%
+Macro Recall: 74.38%
+Macro F1: 74.37%
+
+Confusion Matrix:
+[2779, 430, 270]
+[387, 2149, 587]
+[382, 439, 2392]
+
+Genre Results:
+- fiction: rows=1973, accuracy=73.14%, f1=72.93%
+- government: rows=1945, accuracy=79.74%, f1=79.39%
+- slate: rows=1955, accuracy=70.59%, f1=70.49%
+- telephone: rows=1966, accuracy=74.47%, f1=74.35%
+- travel: rows=1976, accuracy=75.00%, f1=74.76%
+
+============================================================
+
+validation_mismatched
+------------------------------------------------------------
+Rows: 9832
+Accuracy: 75.54%
+Macro Precision: 75.39%
+Macro Recall: 75.34%
+Macro F1: 75.34%
+
+Confusion Matrix:
+[2828, 417, 218]
+[444, 2194, 491]
+[342, 493, 2405]
+
+Genre Results:
+- facetoface: rows=1974, accuracy=73.61%, f1=73.39%
+- letters: rows=1977, accuracy=78.55%, f1=78.17%
+- nineeleven: rows=1974, accuracy=75.53%, f1=75.16%
+- oup: rows=1961, accuracy=76.54%, f1=76.41%
+- verbatim: rows=1946, accuracy=73.43%, f1=73.40%
+
+============================================================

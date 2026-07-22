@@ -1,0 +1,119 @@
+{
+  "label_mapping": {
+    "0": "entailment",
+    "1": "neutral",
+    "2": "contradiction"
+  },
+  "datasets": {
+    "train": {
+      "rows": 392702,
+      "label_counts": {
+        "0": 130899,
+        "1": 130900,
+        "2": 130903
+      },
+      "genre_counts": {
+        "telephone": 83348,
+        "fiction": 77348,
+        "government": 77350,
+        "slate": 77306,
+        "travel": 77350
+      },
+      "missing": {
+        "pairID": 0,
+        "premise": 0,
+        "hypothesis": 40,
+        "genre": 0,
+        "label": 0
+      },
+      "exact_triplet_duplicates": 22,
+      "premise_words": {
+        "mean": 19.811,
+        "p95": 44.0,
+        "max": 382
+      },
+      "hypothesis_words": {
+        "mean": 9.9721,
+        "p95": 18.0,
+        "max": 69
+      }
+    },
+    "validation_matched": {
+      "rows": 9815,
+      "label_counts": {
+        "0": 3479,
+        "1": 3123,
+        "2": 3213
+      },
+      "genre_counts": {
+        "travel": 1976,
+        "fiction": 1973,
+        "telephone": 1966,
+        "slate": 1955,
+        "government": 1945
+      },
+      "missing": {
+        "pairID": 0,
+        "premise": 0,
+        "hypothesis": 0,
+        "genre": 0,
+        "label": 0
+      },
+      "exact_triplet_duplicates": 0,
+      "premise_words": {
+        "mean": 19.2661,
+        "p95": 43.3,
+        "max": 196
+      },
+      "hypothesis_words": {
+        "mean": 9.9164,
+        "p95": 17.0,
+        "max": 46
+      }
+    },
+    "validation_mismatched": {
+      "rows": 9832,
+      "label_counts": {
+        "0": 3463,
+        "1": 3129,
+        "2": 3240
+      },
+      "genre_counts": {
+        "letters": 1977,
+        "facetoface": 1974,
+        "nineeleven": 1974,
+        "oup": 1961,
+        "verbatim": 1946
+      },
+      "missing": {
+        "pairID": 0,
+        "premise": 0,
+        "hypothesis": 0,
+        "genre": 0,
+        "label": 0
+      },
+      "exact_triplet_duplicates": 2,
+      "premise_words": {
+        "mean": 19.6422,
+        "p95": 42.0,
+        "max": 129
+      },
+      "hypothesis_words": {
+        "mean": 10.8263,
+        "p95": 19.0,
+        "max": 53
+      }
+    }
+  },
+  "cleaning_policy": {
+    "train": [
+      "Drop rows with missing premise or hypothesis.",
+      "Drop exact duplicates based on premise, hypothesis, and label.",
+      "Keep pairID, premise, hypothesis, genre, and numeric label."
+    ],
+    "validation": [
+      "Do not remove official validation rows.",
+      "Only validate schema and values before evaluation."
+    ]
+  }
+}

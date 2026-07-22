@@ -1,0 +1,170 @@
+{
+  "validation_matched": {
+    "accuracy": 0.7457972491085074,
+    "precision_macro": 0.7438485574624955,
+    "recall_macro": 0.7437962405327765,
+    "f1_macro": 0.7437210932709984,
+    "classification_report": {
+      "ENTAILMENT": {
+        "precision": 0.7832581736189402,
+        "recall": 0.7987927565392354,
+        "f1-score": 0.790949195958446,
+        "support": 3479.0
+      },
+      "NEUTRAL": {
+        "precision": 0.7120609675281644,
+        "recall": 0.6881203970541147,
+        "f1-score": 0.6998860120501547,
+        "support": 3123.0
+      },
+      "CONTRADICTION": {
+        "precision": 0.7362265312403816,
+        "recall": 0.7444755680049797,
+        "f1-score": 0.740328071804395,
+        "support": 3213.0
+      },
+      "accuracy": 0.7457972491085074,
+      "macro avg": {
+        "precision": 0.7438485574624955,
+        "recall": 0.7437962405327765,
+        "f1-score": 0.7437210932709984,
+        "support": 9815.0
+      },
+      "weighted avg": {
+        "precision": 0.7452080929685274,
+        "recall": 0.7457972491085074,
+        "f1-score": 0.7454029916535495,
+        "support": 9815.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        2779,
+        430,
+        270
+      ],
+      [
+        387,
+        2149,
+        587
+      ],
+      [
+        382,
+        439,
+        2392
+      ]
+    ],
+    "rows": 9815,
+    "genre_metrics": {
+      "fiction": {
+        "rows": 1973,
+        "accuracy": 0.7313735428281805,
+        "f1_macro": 0.7293240532728508
+      },
+      "government": {
+        "rows": 1945,
+        "accuracy": 0.7974293059125964,
+        "f1_macro": 0.7938682499549833
+      },
+      "slate": {
+        "rows": 1955,
+        "accuracy": 0.7058823529411765,
+        "f1_macro": 0.7048699486703889
+      },
+      "telephone": {
+        "rows": 1966,
+        "accuracy": 0.7446592065106816,
+        "f1_macro": 0.7435180775856235
+      },
+      "travel": {
+        "rows": 1976,
+        "accuracy": 0.75,
+        "f1_macro": 0.7476373018723672
+      }
+    }
+  },
+  "validation_mismatched": {
+    "accuracy": 0.7553905614320586,
+    "precision_macro": 0.7538869699401062,
+    "recall_macro": 0.7533664714073599,
+    "f1_macro": 0.7534023442249101,
+    "classification_report": {
+      "ENTAILMENT": {
+        "precision": 0.7825124515771997,
+        "recall": 0.8166329771874098,
+        "f1-score": 0.7992087042532147,
+        "support": 3463.0
+      },
+      "NEUTRAL": {
+        "precision": 0.7068298969072165,
+        "recall": 0.7011824864173858,
+        "f1-score": 0.7039948660356169,
+        "support": 3129.0
+      },
+      "CONTRADICTION": {
+        "precision": 0.7723185613359024,
+        "recall": 0.7422839506172839,
+        "f1-score": 0.7570034623858987,
+        "support": 3240.0
+      },
+      "accuracy": 0.7553905614320586,
+      "macro avg": {
+        "precision": 0.7538869699401062,
+        "recall": 0.7533664714073599,
+        "f1-score": 0.7534023442249101,
+        "support": 9832.0
+      },
+      "weighted avg": {
+        "precision": 0.7550674843330805,
+        "recall": 0.7553905614320586,
+        "f1-score": 0.7549990741237429,
+        "support": 9832.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        2828,
+        417,
+        218
+      ],
+      [
+        444,
+        2194,
+        491
+      ],
+      [
+        342,
+        493,
+        2405
+      ]
+    ],
+    "rows": 9832,
+    "genre_metrics": {
+      "facetoface": {
+        "rows": 1974,
+        "accuracy": 0.7360688956433638,
+        "f1_macro": 0.7338946077871317
+      },
+      "letters": {
+        "rows": 1977,
+        "accuracy": 0.7855336368234699,
+        "f1_macro": 0.781726914036314
+      },
+      "nineeleven": {
+        "rows": 1974,
+        "accuracy": 0.7553191489361702,
+        "f1_macro": 0.751599954294027
+      },
+      "oup": {
+        "rows": 1961,
+        "accuracy": 0.7654258031616522,
+        "f1_macro": 0.7640562866549846
+      },
+      "verbatim": {
+        "rows": 1946,
+        "accuracy": 0.7343268242548818,
+        "f1_macro": 0.7340210038131313
+      }
+    }
+  }
+}
