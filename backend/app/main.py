@@ -1,11 +1,14 @@
 """Main FastAPI application for the Scientific Claim Verifier."""
 
-from typing import Any
-
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 
 from backend.app.model_service import get_model_service
+from backend.app.schemas import (
+    HealthResponse,
+    PredictionRequest,
+    PredictionResponse,
+    RootResponse,
+)
 
 
 app = FastAPI(
@@ -18,36 +21,47 @@ app = FastAPI(
 )
 
 
-class PredictionRequest(BaseModel):
-    """Input sentences required for NLI prediction."""
-
-    premise: str
-    hypothesis: str
-
-
-@app.get("/")
-def read_root() -> dict[str, str]:
+@app.get(
+    "/",
+    response_model=RootResponse,
+    summary="Read API status",
+    description="Return basic information about the API.",
+)
+def read_root() -> RootResponse:
     """Return basic information about the API."""
 
-    return {
-        "message": "Scientific Claim Verifier API is running",
-        "status": "success",
-    }
+    return RootResponse(
+        message="Scientific Claim Verifier API is running",
+        status="success",
+    )
 
 
-@app.get("/health")
-def health_check() -> dict[str, str]:
+@app.get(
+    "/health",
+    response_model=HealthResponse,
+    summary="Check backend health",
+    description="Check whether the backend application is working.",
+)
+def health_check() -> HealthResponse:
     """Check whether the backend is working."""
 
-    return {
-        "status": "healthy",
-    }
+    return HealthResponse(
+        status="healthy",
+    )
 
 
-@app.post("/predict")
+@app.post(
+    "/predict",
+    response_model=PredictionResponse,
+    summary="Verify a claim",
+    description=(
+        "Classify the relationship between a premise and hypothesis "
+        "as Entailment, Neutral, or Contradiction."
+    ),
+)
 def predict_claim(
     request: PredictionRequest,
-) -> dict[str, Any]:
+) -> PredictionResponse:
     """Predict the relationship between premise and hypothesis."""
 
     premise = request.premise.strip()
@@ -72,8 +86,8 @@ def predict_claim(
         hypothesis=hypothesis,
     )
 
-    return {
-        "premise": premise,
-        "hypothesis": hypothesis,
+    return PredictionResponse(
+        premise=premise,
+        hypothesis=hypothesis,
         **prediction_result,
-    }
+    )
