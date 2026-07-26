@@ -162,3 +162,46 @@ def test_invalid_json_is_rejected() -> None:
 
     assert response.status_code == 422
     assert "detail" in response.json()
+
+def test_prediction_response_structure(monkeypatch) -> None:
+    """Test the complete prediction response structure."""
+
+    monkeypatch.setattr(
+        main_module,
+        "get_model_service",
+        lambda: FakeModelService(),
+    )
+
+    response = client.post(
+        "/predict",
+        json={
+            "premise": "A man is playing a guitar.",
+            "hypothesis": "A person is performing music.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    result = response.json()
+
+    assert set(result.keys()) == {
+        "premise",
+        "hypothesis",
+        "prediction",
+        "confidence",
+        "scores",
+        "device",
+    }
+
+    assert set(result["scores"].keys()) == {
+        "ENTAILMENT",
+        "NEUTRAL",
+        "CONTRADICTION",
+    }
+
+    assert 0.0 <= result["confidence"] <= 1.0
+    assert result["prediction"] in {
+        "ENTAILMENT",
+        "NEUTRAL",
+        "CONTRADICTION",
+    }
