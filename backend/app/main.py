@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 
 from backend.app.model_service import get_model_service
 from backend.app.schemas import (
+    ErrorResponse,
     HealthResponse,
     PredictionRequest,
     PredictionResponse,
@@ -58,30 +59,52 @@ def health_check() -> HealthResponse:
         "Classify the relationship between a premise and hypothesis "
         "as Entailment, Neutral, or Contradiction."
     ),
-    responses={
-        200: {
-            "description": "Successful claim verification response.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "premise": (
-                            "A man is playing a guitar on stage."
-                        ),
-                        "hypothesis": (
-                            "A person is performing music."
-                        ),
-                        "prediction": "ENTAILMENT",
-                        "confidence": 0.90,
-                        "scores": {
-                            "ENTAILMENT": 0.90,
-                            "NEUTRAL": 0.08,
-                            "CONTRADICTION": 0.02,
-                        },
-                        "device": "cuda",
-                    }
+responses={
+    200: {
+        "description": "Successful claim verification response.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "premise": (
+                        "A man is playing a guitar on stage."
+                    ),
+                    "hypothesis": (
+                        "A person is performing music."
+                    ),
+                    "prediction": "ENTAILMENT",
+                    "confidence": 0.90,
+                    "scores": {
+                        "ENTAILMENT": 0.90,
+                        "NEUTRAL": 0.08,
+                        "CONTRADICTION": 0.02,
+                    },
+                    "device": "cuda",
                 }
-            },
-        }
+            }
+        },
+    },
+    422: {
+        "model": ErrorResponse,
+        "description": "Invalid input data.",
+        "content": {
+            "application/json": {
+                "examples": {
+                    "empty_premise": {
+                        "summary": "Empty premise",
+                        "value": {
+                            "detail": "Premise cannot be empty.",
+                        },
+                    },
+                    "empty_hypothesis": {
+                        "summary": "Empty hypothesis",
+                        "value": {
+                            "detail": "Hypothesis cannot be empty.",
+                        },
+                    },
+                }
+            }
+        },
+    },
     },
 )
 def predict_claim(

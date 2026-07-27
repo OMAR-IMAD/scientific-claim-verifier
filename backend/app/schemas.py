@@ -162,3 +162,21 @@ class PredictionResponse(BaseModel):
         ...,
         description="Device used to run the model.",
     )
+
+class ErrorResponse(BaseModel):
+    """Simple error response returned by the API."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "detail": "Premise cannot be empty.",
+                }
+            ]
+        }
+    )
+
+    detail: str = Field(
+        ...,
+        description="Explanation of the API error.",
+    )
