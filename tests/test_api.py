@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
 import backend.app.main as main_module
@@ -28,9 +29,20 @@ class FakeModelService:
                 "NEUTRAL": 0.08,
                 "CONTRADICTION": 0.02,
             },
+
             "device": "test",
         }
 
+
+@pytest.fixture
+def valid_prediction_payload() -> dict[str, str]:
+
+    """Return reusable valid prediction input."""
+
+    return {
+        "premise": "A man is playing a guitar.",
+        "hypothesis": "A person is performing music.",
+    }
 
 def test_root_endpoint() -> None:
     """Test the main API endpoint."""
@@ -57,7 +69,10 @@ def test_health_endpoint() -> None:
     }
 
 
-def test_predict_endpoint(monkeypatch) -> None:
+def test_predict_endpoint(
+    monkeypatch,
+    valid_prediction_payload: dict[str, str],
+) -> None:
     """Test a successful prediction request."""
 
     monkeypatch.setattr(
@@ -68,14 +83,8 @@ def test_predict_endpoint(monkeypatch) -> None:
 
     response = client.post(
         "/predict",
-        json={
-            "premise": (
-                "A man is playing a guitar."
-            ),
-            "hypothesis": (
-                "A person is performing music."
-            ),
-        },
+     json=valid_prediction_payload,
+
     )
 
     assert response.status_code == 200
@@ -163,7 +172,10 @@ def test_invalid_json_is_rejected() -> None:
     assert response.status_code == 422
     assert "detail" in response.json()
 
-def test_prediction_response_structure(monkeypatch) -> None:
+def test_prediction_response_structure(
+    monkeypatch,
+    valid_prediction_payload: dict[str, str],
+) -> None:
     """Test the complete prediction response structure."""
 
     monkeypatch.setattr(
@@ -174,10 +186,8 @@ def test_prediction_response_structure(monkeypatch) -> None:
 
     response = client.post(
         "/predict",
-        json={
-            "premise": "A man is playing a guitar.",
-            "hypothesis": "A person is performing music.",
-        },
+       json=valid_prediction_payload,
+
     )
 
     assert response.status_code == 200
