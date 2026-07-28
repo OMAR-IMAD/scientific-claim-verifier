@@ -205,3 +205,45 @@ def test_prediction_response_structure(monkeypatch) -> None:
         "NEUTRAL",
         "CONTRADICTION",
     }
+
+def test_openapi_contains_error_response_schema() -> None:
+    """Test ErrorResponse schema in OpenAPI documentation."""
+
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+
+    openapi_schema = response.json()
+    error_schema = openapi_schema["components"]["schemas"]["ErrorResponse"]
+
+    assert error_schema["type"] == "object"
+    assert error_schema["required"] == ["detail"]
+    assert error_schema["properties"]["detail"]["type"] == "string"
+    assert (
+        error_schema["properties"]["detail"]["description"]
+        == "Explanation of the API error."
+    )
+
+def test_openapi_contains_custom_422_examples() -> None:
+    """Test custom 422 error examples in OpenAPI documentation."""
+
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+
+    openapi_schema = response.json()
+    error_response = openapi_schema["paths"]["/predict"]["post"][
+        "responses"
+    ]["422"]
+
+    assert error_response["description"] == "Invalid input data."
+
+    examples = error_response["content"]["application/json"]["examples"]
+
+    assert examples["empty_premise"]["value"] == {
+        "detail": "Premise cannot be empty.",
+    }
+
+    assert examples["empty_hypothesis"]["value"] == {
+        "detail": "Hypothesis cannot be empty.",
+    }
