@@ -44,6 +44,20 @@ def valid_prediction_payload() -> dict[str, str]:
         "hypothesis": "A person is performing music.",
     }
 
+@pytest.fixture
+def mock_model_service(monkeypatch) -> FakeModelService:
+    """Replace the real model service with a reusable fake service."""
+
+    fake_service = FakeModelService()
+
+    monkeypatch.setattr(
+        main_module,
+        "get_model_service",
+        lambda: fake_service,
+    )
+
+    return fake_service
+
 def test_root_endpoint() -> None:
     """Test the main API endpoint."""
 
@@ -70,21 +84,14 @@ def test_health_endpoint() -> None:
 
 
 def test_predict_endpoint(
-    monkeypatch,
+    mock_model_service: FakeModelService,
     valid_prediction_payload: dict[str, str],
 ) -> None:
     """Test a successful prediction request."""
 
-    monkeypatch.setattr(
-        main_module,
-        "get_model_service",
-        lambda: FakeModelService(),
-    )
-
     response = client.post(
         "/predict",
-     json=valid_prediction_payload,
-
+        json=valid_prediction_payload,
     )
 
     assert response.status_code == 200
@@ -173,16 +180,10 @@ def test_invalid_json_is_rejected() -> None:
     assert "detail" in response.json()
 
 def test_prediction_response_structure(
-    monkeypatch,
+    mock_model_service: FakeModelService,
     valid_prediction_payload: dict[str, str],
 ) -> None:
     """Test the complete prediction response structure."""
-
-    monkeypatch.setattr(
-        main_module,
-        "get_model_service",
-        lambda: FakeModelService(),
-    )
 
     response = client.post(
         "/predict",
