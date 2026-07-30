@@ -58,6 +58,18 @@ def mock_model_service(monkeypatch) -> FakeModelService:
 
     return fake_service
 
+
+@pytest.fixture
+def openapi_schema() -> dict[str, Any]:
+    """Return the generated OpenAPI schema."""
+
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+
+    return response.json()
+
+
 def test_root_endpoint() -> None:
     """Test the main API endpoint."""
 
@@ -217,14 +229,11 @@ def test_prediction_response_structure(
         "CONTRADICTION",
     }
 
-def test_openapi_contains_error_response_schema() -> None:
+def test_openapi_contains_error_response_schema(
+    openapi_schema: dict[str, Any],
+) -> None:
     """Test ErrorResponse schema in OpenAPI documentation."""
 
-    response = client.get("/openapi.json")
-
-    assert response.status_code == 200
-
-    openapi_schema = response.json()
     error_schema = openapi_schema["components"]["schemas"]["ErrorResponse"]
 
     assert error_schema["type"] == "object"
@@ -235,14 +244,11 @@ def test_openapi_contains_error_response_schema() -> None:
         == "Explanation of the API error."
     )
 
-def test_openapi_contains_custom_422_examples() -> None:
+def test_openapi_contains_custom_422_examples(
+    openapi_schema: dict[str, Any],
+) -> None:
     """Test custom 422 error examples in OpenAPI documentation."""
 
-    response = client.get("/openapi.json")
-
-    assert response.status_code == 200
-
-    openapi_schema = response.json()
     error_response = openapi_schema["paths"]["/predict"]["post"][
         "responses"
     ]["422"]
