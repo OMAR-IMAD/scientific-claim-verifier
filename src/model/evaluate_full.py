@@ -370,8 +370,66 @@ def evaluate_split(
         f"{metrics['f1_macro'] * 100:.2f}%"
     )
 
-    return metrics
+    evaluation_rows = dataframe.copy()
+    evaluation_rows["prediction"] = predicted_labels
+    evaluation_rows["label_name"] = [
+        LABEL_NAMES[label]
+        for label in correct_labels
+    ]
+    evaluation_rows["prediction_name"] = [
+        LABEL_NAMES[label]
+        for label in predicted_labels
+    ]
 
+    misclassified_rows = evaluation_rows[
+        evaluation_rows["label"]
+        != evaluation_rows["prediction"]
+    ].copy()
+
+    error_directory = Path("reports/error_analysis")
+    error_directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    safe_split_name = split_name.lower().replace(
+        " ",
+        "_",
+    )
+
+    error_file = (
+        error_directory
+        / f"{safe_split_name}_misclassified.csv"
+    )
+
+    error_columns = [
+        "premise",
+        "hypothesis",
+        "genre",
+        "label",
+        "label_name",
+        "prediction",
+        "prediction_name",
+    ]
+
+    misclassified_rows[error_columns].to_csv(
+        error_file,
+        index=False,
+        encoding="utf-8",
+    )
+
+    metrics["misclassified_rows"] = int(
+        len(misclassified_rows)
+    )
+    metrics["error_file"] = str(error_file)
+
+    print(
+        "Misclassified rows: "
+        f"{len(misclassified_rows)}"
+    )
+    print(f"Error file: {error_file}")
+
+    return metrics
 
 def create_text_summary(
     results: dict[str, Any],

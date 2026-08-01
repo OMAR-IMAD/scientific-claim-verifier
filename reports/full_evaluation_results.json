@@ -81,7 +81,9 @@
         "accuracy": 0.75,
         "f1_macro": 0.7476373018723672
       }
-    }
+    },
+    "misclassified_rows": 2495,
+    "error_file": "reports\\error_analysis\\validation_matched_misclassified.csv"
   },
   "validation_mismatched": {
     "accuracy": 0.7553905614320586,
@@ -165,6 +167,8 @@
         "accuracy": 0.7343268242548818,
         "f1_macro": 0.7340210038131313
       }
-    }
+    },
+    "misclassified_rows": 2405,
+    "error_file": "reports\\error_analysis\\validation_mismatched_misclassified.csv"
   }
 }
