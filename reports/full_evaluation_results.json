@@ -83,6 +83,11 @@
       }
     },
     "misclassified_rows": 2495,
+    "average_confidence": 0.8337305334230133,
+    "correct_average_confidence": 0.8704262655289446,
+    "misclassified_average_confidence": 0.7260701089679359,
+    "low_confidence_rows": 1289,
+    "confidence_threshold": 0.6,
     "error_file": "reports\\error_analysis\\validation_matched_misclassified.csv"
   },
   "validation_mismatched": {
@@ -169,6 +174,11 @@
       }
     },
     "misclassified_rows": 2405,
+    "average_confidence": 0.8389623407623068,
+    "correct_average_confidence": 0.874687354048152,
+    "misclassified_average_confidence": 0.7286381521244802,
+    "low_confidence_rows": 1251,
+    "confidence_threshold": 0.6,
     "error_file": "reports\\error_analysis\\validation_mismatched_misclassified.csv"
   }
 }

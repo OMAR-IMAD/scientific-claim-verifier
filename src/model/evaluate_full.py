@@ -144,10 +144,11 @@ def predict_dataframe(
     tokenizer,
     model,
     device,
-) -> list[int]:
+) -> tuple[list[int], list[float]]:
     """Generate predictions for all rows in a dataframe."""
 
     predictions: list[int] = []
+    confidences: list[float] = []
 
     total_rows = len(dataframe)
 
@@ -192,13 +193,26 @@ def predict_dataframe(
             else:
                 logits = model(**inputs).logits
 
-        batch_predictions = (
-            torch.argmax(logits, dim=-1)
-            .cpu()
-            .tolist()
+        probabilities = torch.softmax(
+            logits,
+            dim=-1,
         )
 
-        predictions.extend(batch_predictions)
+        (
+            batch_confidences,
+            batch_predictions,
+        ) = torch.max(
+            probabilities,
+            dim=-1,
+        )
+
+        predictions.extend(
+            batch_predictions.cpu().tolist()
+        )
+        confidences.extend(
+            batch_confidences.cpu().tolist()
+        )
+
 
         if (
             batch_number % 25 == 0
@@ -209,7 +223,7 @@ def predict_dataframe(
                 f"{batch_number}/{total_batches}"
             )
 
-    return predictions
+    return predictions, confidences
 
 
 def calculate_basic_metrics(
@@ -333,7 +347,7 @@ def evaluate_split(
     print(f"Rows: {len(dataframe)}")
     print(f"File: {file_path}")
 
-    predicted_labels = predict_dataframe(
+    predicted_labels, confidences = predict_dataframe(
         dataframe,
         tokenizer,
         model,
@@ -372,6 +386,7 @@ def evaluate_split(
 
     evaluation_rows = dataframe.copy()
     evaluation_rows["prediction"] = predicted_labels
+    evaluation_rows["confidence"] = confidences
     evaluation_rows["label_name"] = [
         LABEL_NAMES[label]
         for label in correct_labels
@@ -410,6 +425,7 @@ def evaluate_split(
         "label_name",
         "prediction",
         "prediction_name",
+                 "confidence",
     ]
 
     misclassified_rows[error_columns].to_csv(
@@ -421,6 +437,34 @@ def evaluate_split(
     metrics["misclassified_rows"] = int(
         len(misclassified_rows)
     )
+
+    metrics["average_confidence"] = float(
+        evaluation_rows["confidence"].mean()
+    )
+
+    metrics["correct_average_confidence"] = float(
+        evaluation_rows.loc[
+            (
+                evaluation_rows["label"]
+                == evaluation_rows["prediction"]
+            ),
+            "confidence",
+        ].mean()
+    )
+
+    metrics["misclassified_average_confidence"] = float(
+        misclassified_rows["confidence"].mean()
+    )
+
+    metrics["low_confidence_rows"] = int(
+        (
+            evaluation_rows["confidence"]
+            < 0.60
+        ).sum()
+    )
+
+    metrics["confidence_threshold"] = 0.60
+
     metrics["error_file"] = str(error_file)
 
     print(
