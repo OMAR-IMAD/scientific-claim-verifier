@@ -55,6 +55,15 @@ class NLIModelService:
 
         self.model.to(self.device)
         self.model.eval()
+    def is_ready(self) -> bool:
+        """Return whether the tokenizer and model are ready."""
+
+        return (
+            hasattr(self, "tokenizer")
+            and self.tokenizer is not None
+            and hasattr(self, "model")
+            and self.model is not None
+        )
 
     def predict(
         self,

@@ -35,12 +35,16 @@ def main() -> None:
     health_response = client.get("/health")
 
     assert health_response.status_code == 200
-    assert health_response.json() == {
-        "status": "healthy",
-    }
+
+    health_data = health_response.json()
+
+    assert health_data["status"] == "healthy"
+    assert health_data["model_ready"] is True
+    assert health_data["model_status"] == "ready"
+    assert health_data["device"] in {"cpu", "cuda"}
+    assert health_data["detail"] is None
 
     print("[PASS] Health endpoint")
-
 
     prediction_response = client.post(
         "/predict",

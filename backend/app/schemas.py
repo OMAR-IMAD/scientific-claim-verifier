@@ -40,12 +40,20 @@ class HealthResponse(BaseModel):
             "examples": [
                 {
                     "status": "healthy",
+                    "model_ready": True,
+                    "model_status": "ready",
+                    "device": "cuda",
+                    "detail": None,
                 }
             ]
         }
     )
 
     status: str
+    model_ready: bool
+    model_status: str
+    device: str | None = None
+    detail: str | None = None
 
 
 class PredictionRequest(BaseModel):

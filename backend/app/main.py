@@ -44,12 +44,43 @@ def read_root() -> RootResponse:
     description="Check whether the backend application is working.",
 )
 def health_check() -> HealthResponse:
-    """Check whether the backend is working."""
+    """Check whether the backend and model are ready."""
 
-    return HealthResponse(
-        status="healthy",
-    )
+    try:
+        model_service = get_model_service()
+        model_ready = model_service.is_ready()
 
+        if not model_ready:
+            return HealthResponse(
+                status="degraded",
+                model_ready=False,
+                model_status="not_ready",
+                device=str(
+                    getattr(
+                        model_service,
+                        "device",
+                        "unknown",
+                    )
+                ),
+                detail="Model service is not ready.",
+            )
+
+        return HealthResponse(
+            status="healthy",
+            model_ready=True,
+            model_status="ready",
+            device=str(model_service.device),
+            detail=None,
+        )
+
+    except Exception as error:
+        return HealthResponse(
+            status="degraded",
+            model_ready=False,
+            model_status="unavailable",
+            device=None,
+            detail=str(error),
+        )
 
 @app.post(
     "/predict",

@@ -14,6 +14,16 @@ client = TestClient(main_module.app)
 class FakeModelService:
     """Provide predictable results without loading the real model."""
 
+    def __init__(self) -> None:
+        """Initialize the fake service."""
+
+        self.device = "test"
+
+    def is_ready(self) -> bool:
+        """Return the fake model readiness state."""
+
+        return True
+
     def predict(
         self,
         premise: str,
@@ -83,17 +93,69 @@ def test_root_endpoint() -> None:
         "status": "success",
     }
 
+def test_health_endpoint_when_model_is_not_ready(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Test the health response when the model is not ready."""
 
-def test_health_endpoint() -> None:
-    """Test the backend health endpoint."""
+    monkeypatch.setattr(
+        mock_model_service,
+        "is_ready",
+        lambda: False,
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "degraded",
+        "model_ready": False,
+        "model_status": "not_ready",
+        "device": "test",
+        "detail": "Model service is not ready.",
+    }
+
+def test_health_endpoint_when_model_service_fails(
+    monkeypatch,
+) -> None:
+    """Test the health response when model loading fails."""
+
+    def raise_model_loading_error() -> None:
+        raise RuntimeError("Model loading failed.")
+
+    monkeypatch.setattr(
+        main_module,
+        "get_model_service",
+        raise_model_loading_error,
+    )
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "degraded",
+        "model_ready": False,
+        "model_status": "unavailable",
+        "device": None,
+        "detail": "Model loading failed.",
+    }
+
+def test_health_endpoint(
+    mock_model_service: FakeModelService,
+) -> None:
+    """Test the backend and model health endpoint."""
 
     response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {
         "status": "healthy",
+        "model_ready": True,
+        "model_status": "ready",
+        "device": "test",
+        "detail": None,
     }
-
 
 def test_predict_endpoint(
     mock_model_service: FakeModelService,
