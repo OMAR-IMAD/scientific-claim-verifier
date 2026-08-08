@@ -21,6 +21,28 @@ app = FastAPI(
     version="1.0.0",
 )
 
+MODEL_SERVICE_UNAVAILABLE = "Model service is unavailable."
+MODEL_SERVICE_NOT_READY = "Model service is not ready."
+PREDICTION_FAILED = "Prediction failed."
+
+def get_ready_model_service():
+    """Return the model service when it is available and ready."""
+
+    try:
+        model_service = get_model_service()
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail=MODEL_SERVICE_UNAVAILABLE,
+        )
+
+    if not model_service.is_ready():
+        raise HTTPException(
+            status_code=503,
+            detail=MODEL_SERVICE_NOT_READY,
+        )
+
+    return model_service
 
 @app.get(
     "/",
@@ -62,7 +84,7 @@ def health_check() -> HealthResponse:
                         "unknown",
                     )
                 ),
-                detail="Model service is not ready.",
+                detail=MODEL_SERVICE_NOT_READY,
             )
 
         return HealthResponse(
@@ -120,7 +142,7 @@ responses={
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": "Prediction failed.",
+                        "detail": PREDICTION_FAILED,
                     }
                 }
             },
@@ -134,13 +156,13 @@ responses={
                         "service_unavailable": {
                             "summary": "Model service unavailable",
                             "value": {
-                                "detail": "Model service is unavailable.",
+                                "detail": MODEL_SERVICE_UNAVAILABLE,
                             },
                         },
                         "model_not_ready": {
                             "summary": "Model not ready",
                             "value": {
-                                "detail": "Model service is not ready.",
+                                "detail": MODEL_SERVICE_NOT_READY,
                             },
                         },
                     }
@@ -191,19 +213,7 @@ def predict_claim(
             detail="Hypothesis cannot be empty.",
         )
 
-    try:
-        model_service = get_model_service()
-    except Exception:
-        raise HTTPException(
-            status_code=503,
-            detail="Model service is unavailable.",
-        )
-
-    if not model_service.is_ready():
-        raise HTTPException(
-            status_code=503,
-            detail="Model service is not ready.",
-        )
+    model_service = get_ready_model_service()
 
     try:
         prediction_result = model_service.predict(
@@ -213,7 +223,7 @@ def predict_claim(
     except Exception:
         raise HTTPException(
             status_code=500,
-            detail="Prediction failed.",
+            detail=PREDICTION_FAILED,
         )
 
     return PredictionResponse(
