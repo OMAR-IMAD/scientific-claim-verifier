@@ -114,6 +114,39 @@ responses={
             }
         },
     },
+        500: {
+            "model": ErrorResponse,
+            "description": "Prediction execution failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Prediction failed.",
+                    }
+                }
+            },
+        },
+        503: {
+            "model": ErrorResponse,
+            "description": "Model service is unavailable or not ready.",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "service_unavailable": {
+                            "summary": "Model service unavailable",
+                            "value": {
+                                "detail": "Model service is unavailable.",
+                            },
+                        },
+                        "model_not_ready": {
+                            "summary": "Model not ready",
+                            "value": {
+                                "detail": "Model service is not ready.",
+                            },
+                        },
+                    }
+                }
+            },
+        },
     422: {
         "model": ErrorResponse,
         "description": "Invalid input data.",
@@ -158,12 +191,30 @@ def predict_claim(
             detail="Hypothesis cannot be empty.",
         )
 
-    model_service = get_model_service()
+    try:
+        model_service = get_model_service()
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="Model service is unavailable.",
+        )
 
-    prediction_result = model_service.predict(
-        premise=premise,
-        hypothesis=hypothesis,
-    )
+    if not model_service.is_ready():
+        raise HTTPException(
+            status_code=503,
+            detail="Model service is not ready.",
+        )
+
+    try:
+        prediction_result = model_service.predict(
+            premise=premise,
+            hypothesis=hypothesis,
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Prediction failed.",
+        )
 
     return PredictionResponse(
         premise=premise,

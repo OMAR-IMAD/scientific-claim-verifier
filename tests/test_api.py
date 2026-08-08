@@ -177,6 +177,30 @@ def test_predict_endpoint(
     assert result["device"] == "test"
     assert result["scores"]["ENTAILMENT"] == 0.90
 
+def test_predict_endpoint_when_model_service_fails(
+    monkeypatch,
+    valid_prediction_payload: dict[str, str],
+) -> None:
+    """Test prediction when the model service is unavailable."""
+
+    def raise_model_loading_error() -> None:
+        raise RuntimeError("Model loading failed.")
+
+    monkeypatch.setattr(
+        main_module,
+        "get_model_service",
+        raise_model_loading_error,
+    )
+
+    response = client.post(
+        "/predict",
+        json=valid_prediction_payload,
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Model service is unavailable.",
+    }
 
 def test_empty_premise_is_rejected() -> None:
     """Test rejection of an empty premise."""
@@ -194,6 +218,57 @@ def test_empty_premise_is_rejected() -> None:
         "detail": "Premise cannot be empty.",
     }
 
+def test_predict_endpoint_when_model_is_not_ready(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+    valid_prediction_payload: dict[str, str],
+) -> None:
+    """Test prediction when the model is not ready."""
+
+    monkeypatch.setattr(
+        mock_model_service,
+        "is_ready",
+        lambda: False,
+    )
+
+    response = client.post(
+        "/predict",
+        json=valid_prediction_payload,
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Model service is not ready.",
+    }
+
+def test_predict_endpoint_when_prediction_fails(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+    valid_prediction_payload: dict[str, str],
+) -> None:
+    """Test prediction when model inference fails."""
+
+    def raise_prediction_error(
+        premise: str,
+        hypothesis: str,
+    ) -> None:
+        raise RuntimeError("Prediction execution failed.")
+
+    monkeypatch.setattr(
+        mock_model_service,
+        "predict",
+        raise_prediction_error,
+    )
+
+    response = client.post(
+        "/predict",
+        json=valid_prediction_payload,
+    )
+
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": "Prediction failed.",
+    }
 
 def test_empty_hypothesis_is_rejected() -> None:
     """Test rejection of an empty hypothesis."""
@@ -326,3 +401,21 @@ def test_openapi_contains_custom_422_examples(
     assert examples["empty_hypothesis"]["value"] == {
         "detail": "Hypothesis cannot be empty.",
     }
+
+def test_openapi_contains_predict_error_responses(
+    openapi_schema: dict[str, Any],
+) -> None:
+    """Test that predict endpoint documents 500 and 503 errors."""
+
+    responses = openapi_schema["paths"]["/predict"]["post"]["responses"]
+
+    assert "500" in responses
+    assert "503" in responses
+
+    assert responses["500"]["description"] == (
+        "Prediction execution failed."
+    )
+
+    assert responses["503"]["description"] == (
+        "Model service is unavailable or not ready."
+    )
