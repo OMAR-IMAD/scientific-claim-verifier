@@ -68,6 +68,52 @@ def mock_model_service(monkeypatch) -> FakeModelService:
 
     return fake_service
 
+def test_get_ready_model_service_returns_ready_service(
+    mock_model_service: FakeModelService,
+) -> None:
+    """Test returning a ready model service."""
+
+    service = main_module.get_ready_model_service()
+
+    assert service is mock_model_service
+
+def test_get_ready_model_service_raises_when_service_unavailable(
+    monkeypatch,
+) -> None:
+    """Test error when the model service cannot be loaded."""
+
+    def raise_loading_error():
+        raise RuntimeError("Model loading failed.")
+
+    monkeypatch.setattr(
+        main_module,
+        "get_model_service",
+        raise_loading_error,
+    )
+
+    with pytest.raises(main_module.HTTPException) as error:
+        main_module.get_ready_model_service()
+
+    assert error.value.status_code == 503
+    assert error.value.detail == main_module.MODEL_SERVICE_UNAVAILABLE
+
+def test_get_ready_model_service_raises_when_model_not_ready(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Test error when the model service is not ready."""
+
+    monkeypatch.setattr(
+        mock_model_service,
+        "is_ready",
+        lambda: False,
+    )
+
+    with pytest.raises(main_module.HTTPException) as error:
+        main_module.get_ready_model_service()
+
+    assert error.value.status_code == 503
+    assert error.value.detail == main_module.MODEL_SERVICE_NOT_READY
 
 @pytest.fixture
 def openapi_schema() -> dict[str, Any]:
