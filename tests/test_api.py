@@ -223,6 +223,27 @@ def test_predict_endpoint(
     assert result["device"] == "test"
     assert result["scores"]["ENTAILMENT"] == 0.90
 
+def test_predict_endpoint_strips_input_whitespace(
+    mock_model_service: FakeModelService,
+) -> None:
+    """Test removing extra whitespace from prediction input."""
+
+    response = client.post(
+        "/predict",
+        json={
+            "premise": "  A man is playing a guitar.  ",
+            "hypothesis": "  A person is performing music.  ",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["premise"] == "A man is playing a guitar."
+    assert data["hypothesis"] == "A person is performing music."
+
+
 def test_predict_endpoint_when_model_service_fails(
     monkeypatch,
     valid_prediction_payload: dict[str, str],

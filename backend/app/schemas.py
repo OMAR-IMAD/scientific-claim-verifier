@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 PredictionLabel = Literal[
@@ -90,6 +90,11 @@ class PredictionRequest(BaseModel):
         ],
     )
 
+    @field_validator("premise", "hypothesis")
+    @classmethod
+    def strip_input_text(cls, value: str) -> str:
+        """Remove leading and trailing whitespace from input text."""
+        return value.strip()
 
 class PredictionScores(BaseModel):
     """Confidence scores for the three NLI classes."""

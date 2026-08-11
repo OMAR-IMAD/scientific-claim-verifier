@@ -198,8 +198,8 @@ def predict_claim(
 ) -> PredictionResponse:
     """Predict the relationship between premise and hypothesis."""
 
-    premise = request.premise.strip()
-    hypothesis = request.hypothesis.strip()
+    premise = request.premise
+    hypothesis = request.hypothesis
 
     if not premise:
         raise HTTPException(
