@@ -3,7 +3,11 @@
 import pytest
 from pydantic import ValidationError
 
-from backend.app.schemas import PredictionRequest, PredictionScores
+from backend.app.schemas import (
+    PredictionRequest,
+    PredictionResponse,
+    PredictionScores,
+)
 
 def test_prediction_request_strips_whitespace() -> None:
     """Test removing extra whitespace from request fields."""
@@ -38,3 +42,37 @@ def test_prediction_scores_accepts_valid_values() -> None:
     assert scores.ENTAILMENT == 0.80
     assert scores.NEUTRAL == 0.15
     assert scores.CONTRADICTION == 0.05
+
+def test_prediction_response_rejects_invalid_label() -> None:
+    """Test rejecting an unsupported prediction label."""
+
+    with pytest.raises(ValidationError):
+        PredictionResponse(
+            premise="A man is playing a guitar.",
+            hypothesis="A person is performing music.",
+            prediction="UNKNOWN",
+            confidence=0.90,
+            scores={
+                "ENTAILMENT": 0.90,
+                "NEUTRAL": 0.08,
+                "CONTRADICTION": 0.02,
+            },
+            device="test",
+        )
+
+def test_prediction_response_rejects_invalid_confidence() -> None:
+    """Test rejecting confidence values outside the valid range."""
+
+    with pytest.raises(ValidationError):
+        PredictionResponse(
+            premise="A man is playing a guitar.",
+            hypothesis="A person is performing music.",
+            prediction="ENTAILMENT",
+            confidence=1.20,
+            scores={
+                "ENTAILMENT": 0.90,
+                "NEUTRAL": 0.08,
+                "CONTRADICTION": 0.02,
+            },
+            device="test",
+        )
