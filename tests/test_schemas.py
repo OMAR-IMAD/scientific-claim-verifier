@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from backend.app.schemas import (
+    ErrorResponse,
     PredictionRequest,
     PredictionResponse,
     PredictionScores,
@@ -76,3 +77,18 @@ def test_prediction_response_rejects_invalid_confidence() -> None:
             },
             device="test",
         )
+
+def test_error_response_stores_detail_message() -> None:
+    """Test storing the API error detail message."""
+
+    error = ErrorResponse(
+        detail="Premise cannot be empty.",
+    )
+
+    assert error.detail == "Premise cannot be empty."
+
+def test_error_response_requires_detail() -> None:
+    """Test requiring the API error detail field."""
+
+    with pytest.raises(ValidationError):
+        ErrorResponse()
