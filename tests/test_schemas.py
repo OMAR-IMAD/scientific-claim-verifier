@@ -5,9 +5,11 @@ from pydantic import ValidationError
 
 from backend.app.schemas import (
     ErrorResponse,
+    HealthResponse,
     PredictionRequest,
     PredictionResponse,
     PredictionScores,
+    RootResponse,
 )
 
 def test_prediction_request_strips_whitespace() -> None:
@@ -92,3 +94,31 @@ def test_error_response_requires_detail() -> None:
 
     with pytest.raises(ValidationError):
         ErrorResponse()
+
+def test_root_response_stores_message_and_status() -> None:
+    """Test storing root response fields."""
+
+    response = RootResponse(
+        message="Scientific Claim Verifier API is running",
+        status="success",
+    )
+
+    assert response.message == "Scientific Claim Verifier API is running"
+    assert response.status == "success"
+
+def test_health_response_stores_fields() -> None:
+    """Test storing health response fields."""
+
+    response = HealthResponse(
+        status="healthy",
+        model_ready=True,
+        model_status="ready",
+        device="cuda",
+        detail=None,
+    )
+
+    assert response.status == "healthy"
+    assert response.model_ready is True
+    assert response.model_status == "ready"
+    assert response.device == "cuda"
+    assert response.detail is None
