@@ -11,3 +11,5 @@ data/processed/*
 models/*
 !models/.gitkeep
 *.log
+*.db
+*.sqlite3
