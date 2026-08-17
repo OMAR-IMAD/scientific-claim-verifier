@@ -19,3 +19,14 @@ class Base(DeclarativeBase):
     """Base class for SQLAlchemy models."""
 
     pass
+
+
+def get_db():
+    """Provide a database session."""
+
+    db = SessionLocal()
+
+    try:
+        yield db
+    finally:
+        db.close()

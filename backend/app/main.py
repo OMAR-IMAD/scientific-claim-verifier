@@ -1,7 +1,10 @@
 """Main FastAPI application for the Scientific Claim Verifier."""
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.orm import Session
 
+from backend.app.database import get_db
+from backend.app.models import Analysis
 from backend.app.model_service import get_model_service
 from backend.app.schemas import (
     ErrorResponse,
@@ -195,6 +198,7 @@ responses={
 )
 def predict_claim(
     request: PredictionRequest,
+    db: Session = Depends(get_db),
 ) -> PredictionResponse:
     """Predict the relationship between premise and hypothesis."""
 
