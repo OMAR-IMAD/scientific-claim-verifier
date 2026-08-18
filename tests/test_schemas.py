@@ -10,6 +10,9 @@ from backend.app.schemas import (
     PredictionResponse,
     PredictionScores,
     RootResponse,
+    UserCreate,
+    UserLogin,
+    UserResponse,
 )
 
 def test_prediction_request_strips_whitespace() -> None:
@@ -122,3 +125,63 @@ def test_health_response_stores_fields() -> None:
     assert response.model_status == "ready"
     assert response.device == "cuda"
     assert response.detail is None
+
+
+def test_user_create_normalizes_email() -> None:
+    """Test normalizing a registration email."""
+
+    user = UserCreate(
+        email="  TEST@Example.COM  ",
+        password="TestPassword123!",
+    )
+
+    assert user.email == "test@example.com"
+
+
+def test_user_create_rejects_invalid_email() -> None:
+    """Test rejecting an invalid registration email."""
+
+    with pytest.raises(ValidationError):
+        UserCreate(
+            email="invalid-email",
+            password="TestPassword123!",
+        )
+
+
+def test_user_create_rejects_short_password() -> None:
+    """Test rejecting a password shorter than eight characters."""
+
+    with pytest.raises(ValidationError):
+        UserCreate(
+            email="user@example.com",
+            password="short",
+        )
+
+
+def test_user_login_uses_same_validation_rules() -> None:
+    """Test login data using the same validation rules."""
+
+    login = UserLogin(
+        email="  USER@Example.COM ",
+        password="TestPassword123!",
+    )
+
+    assert login.email == "user@example.com"
+    assert login.password == "TestPassword123!"
+
+
+def test_user_response_exposes_only_public_fields() -> None:
+    """Test exposing only public user fields."""
+
+    class UserRecord:
+        id = 1
+        email = "user@example.com"
+        hashed_password = "secret-hash"
+
+    response = UserResponse.model_validate(UserRecord())
+
+    assert response.model_dump() == {
+        "id": 1,
+        "email": "user@example.com",
+    }
+    assert not hasattr(response, "hashed_password")

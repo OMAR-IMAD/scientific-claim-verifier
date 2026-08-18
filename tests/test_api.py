@@ -486,3 +486,76 @@ def test_openapi_contains_predict_error_responses(
     assert responses["503"]["description"] == (
         "Model service is unavailable or not ready."
     )
+
+
+
+def test_register_user_returns_public_user_data(monkeypatch) -> None:
+    """Test registering a new user successfully."""
+
+    monkeypatch.setattr(
+        main_module,
+        "get_user_by_email",
+        lambda db, email: None,
+    )
+    monkeypatch.setattr(
+        main_module,
+        "hash_password",
+        lambda password: "hashed-password",
+    )
+
+    def fake_create_user(db, email, hashed_password):
+        return type(
+            "UserRecord",
+            (),
+            {
+                "id": 1,
+                "email": email,
+                "hashed_password": hashed_password,
+            },
+        )()
+
+    monkeypatch.setattr(
+        main_module,
+        "create_user",
+        fake_create_user,
+    )
+
+    response = client.post(
+        "/register",
+        json={
+            "email": "USER@Example.COM",
+            "password": "TestPassword123!",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json() == {
+        "id": 1,
+        "email": "user@example.com",
+    }
+    assert "hashed_password" not in response.json()
+
+
+def test_register_user_rejects_duplicate_email(monkeypatch) -> None:
+    """Test rejecting an already registered email."""
+
+    existing_user = object()
+
+    monkeypatch.setattr(
+        main_module,
+        "get_user_by_email",
+        lambda db, email: existing_user,
+    )
+
+    response = client.post(
+        "/register",
+        json={
+            "email": "user@example.com",
+            "password": "TestPassword123!",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": "Email is already registered.",
+    }

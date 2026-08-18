@@ -4,14 +4,18 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.app.database import get_db
+from backend.app.crud import create_user, get_user_by_email
 from backend.app.models import Analysis
 from backend.app.model_service import get_model_service
+from backend.app.security import hash_password
 from backend.app.schemas import (
     ErrorResponse,
     HealthResponse,
     PredictionRequest,
     PredictionResponse,
     RootResponse,
+    UserCreate,
+    UserResponse,
 )
 
 
@@ -106,6 +110,36 @@ def health_check() -> HealthResponse:
             device=None,
             detail=str(error),
         )
+
+
+@app.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=201,
+    summary="Register a new user",
+)
+def register_user(
+    request: UserCreate,
+    db: Session = Depends(get_db),
+) -> UserResponse:
+    """Register a new application user."""
+
+    existing_user = get_user_by_email(db, request.email)
+
+    if existing_user is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Email is already registered.",
+        )
+
+    user = create_user(
+        db,
+        request.email,
+        hash_password(request.password),
+    )
+
+    return UserResponse.model_validate(user)
+
 
 @app.post(
     "/predict",

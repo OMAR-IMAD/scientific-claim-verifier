@@ -193,3 +193,43 @@ class ErrorResponse(BaseModel):
         ...,
         description="Explanation of the API error.",
     )
+
+
+class UserCreate(BaseModel):
+    """Request body used to register a new user."""
+
+    email: str = Field(
+        ...,
+        min_length=3,
+        max_length=255,
+    )
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=128,
+    )
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        """Normalize and validate the email address."""
+
+        email = value.strip().lower()
+
+        if "@" not in email:
+            raise ValueError("Email must contain @.")
+
+        return email
+
+
+class UserLogin(UserCreate):
+    """Request body used to log in a user."""
+
+
+class UserResponse(BaseModel):
+    """Public user data returned by the API."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: str
