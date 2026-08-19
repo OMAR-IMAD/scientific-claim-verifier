@@ -662,3 +662,46 @@ def test_login_user_rejects_unknown_email(monkeypatch) -> None:
     assert response.json() == {
         "detail": "Invalid email or password.",
     }
+
+
+def test_me_endpoint_returns_current_user() -> None:
+    """Return public data for the authenticated user."""
+
+    user = type(
+        "UserRecord",
+        (),
+        {
+            "id": 1,
+            "email": "user@example.com",
+        },
+    )()
+
+    main_module.app.dependency_overrides[
+        main_module.get_current_user
+    ] = lambda: user
+
+    try:
+        response = client.get("/me")
+    finally:
+        main_module.app.dependency_overrides.pop(
+            main_module.get_current_user,
+            None,
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": 1,
+        "email": "user@example.com",
+    }
+
+
+def test_me_endpoint_rejects_missing_token() -> None:
+    """Reject access to /me without a Bearer token."""
+
+    response = client.get("/me")
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "Not authenticated.",
+    }
+    assert response.headers["www-authenticate"] == "Bearer"

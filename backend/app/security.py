@@ -5,11 +5,20 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
+
+from backend.app.crud import get_user_by_email
+from backend.app.database import get_db
+from backend.app.models import User
+
 from pwdlib import PasswordHash
 
 
 password_hash = PasswordHash.recommended()
 
+bearer_scheme = HTTPBearer(auto_error=False)
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 JWT_SECRET_KEY = os.getenv(
@@ -49,6 +58,49 @@ def decode_access_token(token: str) -> dict[str, object]:
         algorithms=[JWT_ALGORITHM],
         options={"require": ["sub", "exp"]},
     )
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User:
+    """Return the authenticated user from a valid Bearer token."""
+
+    if credentials is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        payload = decode_access_token(credentials.credentials)
+    except jwt.InvalidTokenError as exc:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
+
+    subject = payload.get("sub")
+
+    if not isinstance(subject, str) or not subject:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user = get_user_by_email(db, subject)
+
+    if user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user
 
 def hash_password(password: str) -> str:
     """Hash a plain-text password."""

@@ -5,10 +5,11 @@ from sqlalchemy.orm import Session
 
 from backend.app.database import get_db
 from backend.app.crud import create_user, get_user_by_email
-from backend.app.models import Analysis
+from backend.app.models import Analysis, User
 from backend.app.model_service import get_model_service
 from backend.app.security import (
     create_access_token,
+    get_current_user,
     hash_password,
     verify_password,
 )
@@ -172,6 +173,19 @@ def login_user(
     return TokenResponse(
         access_token=create_access_token(user.email),
     )
+
+
+@app.get(
+    "/me",
+    response_model=UserResponse,
+    summary="Read current user",
+)
+def read_current_user(
+    current_user: User = Depends(get_current_user),
+) -> UserResponse:
+    """Return the currently authenticated user."""
+
+    return UserResponse.model_validate(current_user)
 
 @app.post(
     "/predict",
