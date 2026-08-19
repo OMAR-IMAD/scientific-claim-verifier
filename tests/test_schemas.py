@@ -13,6 +13,7 @@ from backend.app.schemas import (
     UserCreate,
     UserLogin,
     UserResponse,
+    TokenResponse,
 )
 
 def test_prediction_request_strips_whitespace() -> None:
@@ -185,3 +186,14 @@ def test_user_response_exposes_only_public_fields() -> None:
         "email": "user@example.com",
     }
     assert not hasattr(response, "hashed_password")
+
+
+def test_token_response_stores_access_token():
+    """Test storing JWT access token response fields."""
+
+    response = TokenResponse(
+        access_token="example.jwt.token",
+    )
+
+    assert response.access_token == "example.jwt.token"
+    assert response.token_type == "bearer"

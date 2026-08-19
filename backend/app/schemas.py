@@ -233,3 +233,10 @@ class UserResponse(BaseModel):
 
     id: int
     email: str
+
+
+class TokenResponse(BaseModel):
+    """JWT access token returned after successful login."""
+
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"

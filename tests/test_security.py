@@ -1,7 +1,14 @@
 """Tests for password security helpers."""
+import jwt
 
-from backend.app.security import hash_password, verify_password
-
+from backend.app.security import (
+    JWT_ALGORITHM,
+    JWT_SECRET_KEY,
+    create_access_token,
+    decode_access_token,
+    hash_password,
+    verify_password,
+)
 
 def test_hash_password_creates_argon2_hash():
     """Create an Argon2 hash from a plain-text password."""
@@ -32,3 +39,29 @@ def test_verify_password_rejects_wrong_password():
         "WrongPassword",
         hashed_password,
     ) is False
+
+
+def test_create_access_token_contains_subject_and_expiration():
+    """Create a JWT containing subject and expiration claims."""
+
+    token = create_access_token("user@example.com")
+
+    payload = jwt.decode(
+        token,
+        JWT_SECRET_KEY,
+        algorithms=[JWT_ALGORITHM],
+    )
+
+    assert payload["sub"] == "user@example.com"
+    assert "exp" in payload
+
+
+def test_decode_access_token_returns_payload():
+    """Decode a valid JWT access token."""
+
+    token = create_access_token("user@example.com")
+
+    payload = decode_access_token(token)
+
+    assert payload["sub"] == "user@example.com"
+    assert "exp" in payload

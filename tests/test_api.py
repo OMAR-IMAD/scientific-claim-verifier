@@ -559,3 +559,106 @@ def test_register_user_rejects_duplicate_email(monkeypatch) -> None:
     assert response.json() == {
         "detail": "Email is already registered.",
     }
+
+
+def test_login_user_returns_access_token(monkeypatch) -> None:
+    """Test successful login returning a JWT access token."""
+
+    user = type(
+        "UserRecord",
+        (),
+        {
+            "email": "user@example.com",
+            "hashed_password": "stored-hash",
+        },
+    )()
+
+    monkeypatch.setattr(
+        main_module,
+        "get_user_by_email",
+        lambda db, email: user,
+    )
+    monkeypatch.setattr(
+        main_module,
+        "verify_password",
+        lambda plain_password, hashed_password: True,
+    )
+    monkeypatch.setattr(
+        main_module,
+        "create_access_token",
+        lambda subject: "test.jwt.token",
+    )
+
+    response = client.post(
+        "/login",
+        json={
+            "email": "user@example.com",
+            "password": "TestPassword123!",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "access_token": "test.jwt.token",
+        "token_type": "bearer",
+    }
+
+
+def test_login_user_rejects_wrong_password(monkeypatch) -> None:
+    """Test rejecting login with an incorrect password."""
+
+    user = type(
+        "UserRecord",
+        (),
+        {
+            "email": "user@example.com",
+            "hashed_password": "stored-hash",
+        },
+    )()
+
+    monkeypatch.setattr(
+        main_module,
+        "get_user_by_email",
+        lambda db, email: user,
+    )
+    monkeypatch.setattr(
+        main_module,
+        "verify_password",
+        lambda plain_password, hashed_password: False,
+    )
+
+    response = client.post(
+        "/login",
+        json={
+            "email": "user@example.com",
+            "password": "WrongPassword123!",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "Invalid email or password.",
+    }
+
+
+def test_login_user_rejects_unknown_email(monkeypatch) -> None:
+    """Test rejecting login for an unknown email."""
+
+    monkeypatch.setattr(
+        main_module,
+        "get_user_by_email",
+        lambda db, email: None,
+    )
+
+    response = client.post(
+        "/login",
+        json={
+            "email": "missing@example.com",
+            "password": "TestPassword123!",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "Invalid email or password.",
+    }

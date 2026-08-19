@@ -7,7 +7,11 @@ from backend.app.database import get_db
 from backend.app.crud import create_user, get_user_by_email
 from backend.app.models import Analysis
 from backend.app.model_service import get_model_service
-from backend.app.security import hash_password
+from backend.app.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from backend.app.schemas import (
     ErrorResponse,
     HealthResponse,
@@ -16,6 +20,8 @@ from backend.app.schemas import (
     RootResponse,
     UserCreate,
     UserResponse,
+    TokenResponse,
+    UserLogin,
 )
 
 
@@ -140,6 +146,32 @@ def register_user(
 
     return UserResponse.model_validate(user)
 
+
+@app.post(
+    "/login",
+    response_model=TokenResponse,
+    summary="Log in a user",
+)
+def login_user(
+    request: UserLogin,
+    db: Session = Depends(get_db),
+) -> TokenResponse:
+    """Authenticate a user and return a JWT access token."""
+
+    user = get_user_by_email(db, request.email)
+
+    if user is None or not verify_password(
+        request.password,
+        user.hashed_password,
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password.",
+        )
+
+    return TokenResponse(
+        access_token=create_access_token(user.email),
+    )
 
 @app.post(
     "/predict",
