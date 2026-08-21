@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.app.database import get_db
-from backend.app.crud import create_user, get_user_by_email
+from backend.app.crud import create_analysis, create_user, get_user_by_email
 from backend.app.models import Analysis, User
 from backend.app.model_service import get_model_service
 from backend.app.security import (
@@ -279,6 +279,7 @@ responses={
 def predict_claim(
     request: PredictionRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> PredictionResponse:
     """Predict the relationship between premise and hypothesis."""
 
@@ -309,6 +310,19 @@ def predict_claim(
             status_code=500,
             detail=PREDICTION_FAILED,
         )
+
+
+    create_analysis(
+        db,
+        user_id=current_user.id,
+        premise=premise,
+        hypothesis=hypothesis,
+        prediction=prediction_result["prediction"],
+        confidence=prediction_result["confidence"],
+        entailment_score=prediction_result["scores"]["ENTAILMENT"],
+        neutral_score=prediction_result["scores"]["NEUTRAL"],
+        contradiction_score=prediction_result["scores"]["CONTRADICTION"],
+    )
 
     return PredictionResponse(
         premise=premise,

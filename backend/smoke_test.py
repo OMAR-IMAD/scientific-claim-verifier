@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import warnings
 
+import uuid
+
+from sqlalchemy import delete
+
 warnings.filterwarnings(
     "ignore",
     message=r"Using `httpx` with `starlette\.testclient` is deprecated.*",
@@ -11,6 +15,8 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import app
 
+from backend.app.database import SessionLocal
+from backend.app.models import Analysis, User
 
 EXPECTED_LABELS = {
     "ENTAILMENT",
@@ -23,6 +29,38 @@ def main() -> None:
     """Run basic integration checks for the backend API."""
 
     client = TestClient(app)
+
+    email = f"smoke_{uuid.uuid4().hex[:8]}@example.com"
+    password = "TestPassword123!"
+
+    register_response = client.post(
+        "/register",
+        json={
+            "email": email,
+            "password": password,
+        },
+    )
+
+    assert register_response.status_code == 201
+    user_id = register_response.json()["id"]
+    print("[PASS] Register endpoint")
+
+    login_response = client.post(
+        "/login",
+        json={
+            "email": email,
+            "password": password,
+        },
+    )
+
+    assert login_response.status_code == 200
+
+    access_token = login_response.json()["access_token"]
+    auth_headers = {
+        "Authorization": f"Bearer {access_token}",
+    }
+
+    print("[PASS] Login endpoint")
 
     root_response = client.get("/")
 
@@ -47,12 +85,13 @@ def main() -> None:
     print("[PASS] Health endpoint")
 
     prediction_response = client.post(
-        "/predict",
-        json={
-            "premise": "A man is playing a guitar.",
-            "hypothesis": "A person is making music.",
-        },
-    )
+    "/predict",
+    json={
+        "premise": "A man is playing a guitar.",
+        "hypothesis": "A person is making music.",
+    },
+    headers=auth_headers,
+)
 
     assert prediction_response.status_code == 200
 
@@ -101,12 +140,13 @@ def main() -> None:
 
 
     empty_premise_response = client.post(
-        "/predict",
-        json={
-            "premise": "   ",
-            "hypothesis": "Valid hypothesis",
-        },
-    )
+    "/predict",
+    json={
+        "premise": "   ",
+        "hypothesis": "Valid hypothesis",
+    },
+    headers=auth_headers,
+)
 
     assert empty_premise_response.status_code == 422
 
@@ -118,12 +158,13 @@ def main() -> None:
 
 
     empty_hypothesis_response = client.post(
-        "/predict",
-        json={
-            "premise": "Valid premise",
-            "hypothesis": "   ",
-        },
-    )
+    "/predict",
+    json={
+        "premise": "Valid premise",
+        "hypothesis": "   ",
+    },
+    headers=auth_headers,
+)
 
     assert empty_hypothesis_response.status_code == 422
 
@@ -132,6 +173,20 @@ def main() -> None:
     }
 
     print("[PASS] Empty hypothesis validation")
+
+    db = SessionLocal()
+    try:
+        db.execute(
+            delete(Analysis).where(Analysis.user_id == user_id)
+        )
+        db.execute(
+            delete(User).where(User.id == user_id)
+        )
+        db.commit()
+    finally:
+        db.close()
+
+    print("[PASS] Smoke test data cleanup")
 
     print("\nAll backend smoke tests passed.")
 

@@ -66,6 +66,27 @@ def mock_model_service(monkeypatch) -> FakeModelService:
         lambda: fake_service,
     )
 
+    current_user = type(
+        "UserRecord",
+        (),
+        {
+            "id": 1,
+            "email": "user@example.com",
+        },
+    )()
+
+    monkeypatch.setitem(
+        main_module.app.dependency_overrides,
+        main_module.get_current_user,
+        lambda: current_user,
+    )
+
+    monkeypatch.setattr(
+        main_module,
+        "create_analysis",
+        lambda *args, **kwargs: None,
+    )
+
     return fake_service
 
 def test_get_ready_model_service_returns_ready_service(
@@ -223,6 +244,41 @@ def test_predict_endpoint(
     assert result["device"] == "test"
     assert result["scores"]["ENTAILMENT"] == 0.90
 
+def test_predict_endpoint_saves_analysis_for_current_user(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+    valid_prediction_payload: dict[str, str],
+) -> None:
+    """Save a successful prediction for the authenticated user."""
+
+    saved_analysis: dict[str, Any] = {}
+
+    def capture_analysis(db, **kwargs) -> None:
+        saved_analysis.update(kwargs)
+
+    monkeypatch.setattr(
+        main_module,
+        "create_analysis",
+        capture_analysis,
+    )
+
+    response = client.post(
+        "/predict",
+        json=valid_prediction_payload,
+    )
+
+    assert response.status_code == 200
+    assert saved_analysis == {
+        "user_id": 1,
+        "premise": "A man is playing a guitar.",
+        "hypothesis": "A person is performing music.",
+        "prediction": "ENTAILMENT",
+        "confidence": 0.90,
+        "entailment_score": 0.90,
+        "neutral_score": 0.08,
+        "contradiction_score": 0.02,
+    }
+
 def test_predict_endpoint_strips_input_whitespace(
     mock_model_service: FakeModelService,
 ) -> None:
@@ -245,6 +301,7 @@ def test_predict_endpoint_strips_input_whitespace(
 
 
 def test_predict_endpoint_when_model_service_fails(
+    mock_model_service: FakeModelService,
     monkeypatch,
     valid_prediction_payload: dict[str, str],
 ) -> None:
@@ -269,7 +326,9 @@ def test_predict_endpoint_when_model_service_fails(
         "detail": "Model service is unavailable.",
     }
 
-def test_empty_premise_is_rejected() -> None:
+def test_empty_premise_is_rejected(
+    mock_model_service: FakeModelService,
+) -> None:
     """Test rejection of an empty premise."""
 
     response = client.post(
@@ -337,7 +396,9 @@ def test_predict_endpoint_when_prediction_fails(
         "detail": "Prediction failed.",
     }
 
-def test_empty_hypothesis_is_rejected() -> None:
+def test_empty_hypothesis_is_rejected(
+    mock_model_service: FakeModelService,
+) -> None:
     """Test rejection of an empty hypothesis."""
 
     response = client.post(
@@ -354,7 +415,9 @@ def test_empty_hypothesis_is_rejected() -> None:
     }
 
 
-def test_missing_hypothesis_is_rejected() -> None:
+def test_missing_hypothesis_is_rejected(
+    mock_model_service: FakeModelService,
+) -> None:
     """Test rejection when hypothesis is missing."""
 
     response = client.post(
@@ -367,7 +430,9 @@ def test_missing_hypothesis_is_rejected() -> None:
     assert response.status_code == 422
     assert "detail" in response.json()
 
-def test_missing_premise_is_rejected() -> None:
+def test_missing_premise_is_rejected(
+    mock_model_service: FakeModelService,
+) -> None:
     """Test rejection when premise is missing."""
 
     response = client.post(
