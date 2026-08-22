@@ -770,3 +770,65 @@ def test_me_endpoint_rejects_missing_token() -> None:
         "detail": "Not authenticated.",
     }
     assert response.headers["www-authenticate"] == "Bearer"
+
+
+def test_history_endpoint_returns_current_user_analyses(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Return previous analyses for the authenticated user."""
+
+    analyses = [
+        {
+            "id": 2,
+            "premise": "Water freezes at zero degrees Celsius.",
+            "hypothesis": "Water can become ice.",
+            "prediction": "ENTAILMENT",
+            "confidence": 0.95,
+            "entailment_score": 0.95,
+            "neutral_score": 0.03,
+            "contradiction_score": 0.02,
+            "created_at": "2026-08-22T10:00:00",
+        },
+        {
+            "id": 1,
+            "premise": "The Earth revolves around the Sun.",
+            "hypothesis": "The Sun revolves around the Earth.",
+            "prediction": "CONTRADICTION",
+            "confidence": 0.97,
+            "entailment_score": 0.01,
+            "neutral_score": 0.02,
+            "contradiction_score": 0.97,
+            "created_at": "2026-08-21T10:00:00",
+        },
+    ]
+
+    requested_user_id: dict[str, int] = {}
+
+    def fake_get_analyses_by_user(db, user_id: int):
+        requested_user_id["value"] = user_id
+        return analyses
+
+    monkeypatch.setattr(
+        main_module,
+        "get_analyses_by_user",
+        fake_get_analyses_by_user,
+    )
+
+    response = client.get("/history")
+
+    assert response.status_code == 200
+    assert requested_user_id["value"] == 1
+    assert response.json() == analyses
+
+
+def test_history_endpoint_rejects_missing_token() -> None:
+    """Reject access to history without a Bearer token."""
+
+    response = client.get("/history")
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "Not authenticated.",
+    }
+    assert response.headers["www-authenticate"] == "Bearer"

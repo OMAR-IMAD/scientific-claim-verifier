@@ -4,7 +4,12 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.app.database import get_db
-from backend.app.crud import create_analysis, create_user, get_user_by_email
+from backend.app.crud import (
+    create_analysis,
+    create_user,
+    get_analyses_by_user,
+    get_user_by_email,
+)
 from backend.app.models import Analysis, User
 from backend.app.model_service import get_model_service
 from backend.app.security import (
@@ -14,6 +19,7 @@ from backend.app.security import (
     verify_password,
 )
 from backend.app.schemas import (
+      AnalysisResponse,
     ErrorResponse,
     HealthResponse,
     PredictionRequest,
@@ -186,6 +192,21 @@ def read_current_user(
     """Return the currently authenticated user."""
 
     return UserResponse.model_validate(current_user)
+
+
+@app.get(
+    "/history",
+    response_model=list[AnalysisResponse],
+    summary="Read analysis history",
+    description="Return previous analyses for the authenticated user.",
+)
+def read_analysis_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[AnalysisResponse]:
+    """Return the authenticated user's previous analyses."""
+
+    return get_analyses_by_user(db, current_user.id)
 
 @app.post(
     "/predict",

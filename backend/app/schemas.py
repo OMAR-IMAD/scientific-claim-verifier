@@ -1,5 +1,6 @@
 """Pydantic schemas used by the Scientific Claim Verifier API."""
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -175,6 +176,22 @@ class PredictionResponse(BaseModel):
         ...,
         description="Device used to run the model.",
     )
+
+
+class AnalysisResponse(BaseModel):
+    """Stored analysis returned in the authenticated user's history."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    premise: str
+    hypothesis: str
+    prediction: PredictionLabel
+    confidence: float
+    entailment_score: float
+    neutral_score: float
+    contradiction_score: float
+    created_at: datetime
 
 class ErrorResponse(BaseModel):
     """Simple error response returned by the API."""
