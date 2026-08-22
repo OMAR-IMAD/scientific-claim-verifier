@@ -832,3 +832,66 @@ def test_history_endpoint_rejects_missing_token() -> None:
         "detail": "Not authenticated.",
     }
     assert response.headers["www-authenticate"] == "Bearer"
+
+
+def test_history_detail_returns_current_user_analysis(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Return one analysis owned by the authenticated user."""
+
+    analysis = {
+        "id": 7,
+        "premise": "Water freezes at zero degrees Celsius.",
+        "hypothesis": "Water can become ice.",
+        "prediction": "ENTAILMENT",
+        "confidence": 0.95,
+        "entailment_score": 0.95,
+        "neutral_score": 0.03,
+        "contradiction_score": 0.02,
+        "created_at": "2026-08-23T10:00:00",
+    }
+
+    requested_values: dict[str, int] = {}
+
+    def fake_get_analysis_by_id_for_user(
+        db,
+        user_id: int,
+        analysis_id: int,
+    ):
+        requested_values["user_id"] = user_id
+        requested_values["analysis_id"] = analysis_id
+        return analysis
+
+    monkeypatch.setattr(
+        main_module,
+        "get_analysis_by_id_for_user",
+        fake_get_analysis_by_id_for_user,
+    )
+
+    response = client.get("/history/7")
+
+    assert response.status_code == 200
+    assert requested_values["user_id"] == 1
+    assert requested_values["analysis_id"] == 7
+    assert response.json() == analysis
+
+
+def test_history_detail_returns_404_when_analysis_not_found(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Return 404 when the requested analysis is unavailable."""
+
+    monkeypatch.setattr(
+        main_module,
+        "get_analysis_by_id_for_user",
+        lambda db, user_id, analysis_id: None,
+    )
+
+    response = client.get("/history/999")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Analysis not found.",
+    }

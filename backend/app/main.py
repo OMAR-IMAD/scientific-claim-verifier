@@ -8,6 +8,7 @@ from backend.app.crud import (
     create_analysis,
     create_user,
     get_analyses_by_user,
+        get_analysis_by_id_for_user,
     get_user_by_email,
 )
 from backend.app.models import Analysis, User
@@ -207,6 +208,33 @@ def read_analysis_history(
     """Return the authenticated user's previous analyses."""
 
     return get_analyses_by_user(db, current_user.id)
+
+@app.get(
+    "/history/{analysis_id}",
+    response_model=AnalysisResponse,
+    summary="Read analysis details",
+    description="Return a specific analysis owned by the authenticated user.",
+)
+def read_analysis_detail(
+    analysis_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> AnalysisResponse:
+    """Return one analysis belonging to the authenticated user."""
+
+    analysis = get_analysis_by_id_for_user(
+        db,
+        current_user.id,
+        analysis_id,
+    )
+
+    if analysis is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Analysis not found.",
+        )
+
+    return AnalysisResponse.model_validate(analysis)
 
 @app.post(
     "/predict",

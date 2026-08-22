@@ -80,3 +80,18 @@ def get_analyses_by_user(
 )
 
     return list(db.scalars(statement).all())
+
+
+def get_analysis_by_id_for_user(
+    db: Session,
+    user_id: int,
+    analysis_id: int,
+) -> Analysis | None:
+    """Return a specific analysis owned by a specific user."""
+
+    statement = select(Analysis).where(
+        Analysis.id == analysis_id,
+        Analysis.user_id == user_id,
+    )
+
+    return db.scalar(statement)
