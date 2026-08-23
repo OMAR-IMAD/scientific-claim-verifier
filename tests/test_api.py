@@ -895,3 +895,54 @@ def test_history_detail_returns_404_when_analysis_not_found(
     assert response.json() == {
         "detail": "Analysis not found.",
     }
+
+
+def test_history_delete_removes_current_user_analysis(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Delete an analysis owned by the authenticated user."""
+
+    requested_values: dict[str, int] = {}
+
+    def fake_delete_analysis_by_id_for_user(
+        db,
+        user_id: int,
+        analysis_id: int,
+    ) -> bool:
+        requested_values["user_id"] = user_id
+        requested_values["analysis_id"] = analysis_id
+        return True
+
+    monkeypatch.setattr(
+        main_module,
+        "delete_analysis_by_id_for_user",
+        fake_delete_analysis_by_id_for_user,
+    )
+
+    response = client.delete("/history/7")
+
+    assert response.status_code == 204
+    assert response.content == b""
+    assert requested_values["user_id"] == 1
+    assert requested_values["analysis_id"] == 7
+
+
+def test_history_delete_returns_404_when_analysis_not_found(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Return 404 when the requested analysis cannot be deleted."""
+
+    monkeypatch.setattr(
+        main_module,
+        "delete_analysis_by_id_for_user",
+        lambda db, user_id, analysis_id: False,
+    )
+
+    response = client.delete("/history/999")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Analysis not found.",
+    }

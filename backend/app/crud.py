@@ -95,3 +95,25 @@ def get_analysis_by_id_for_user(
     )
 
     return db.scalar(statement)
+
+
+def delete_analysis_by_id_for_user(
+    db: Session,
+    user_id: int,
+    analysis_id: int,
+) -> bool:
+    """Delete a specific analysis owned by a specific user."""
+
+    analysis = get_analysis_by_id_for_user(
+        db,
+        user_id,
+        analysis_id,
+    )
+
+    if analysis is None:
+        return False
+
+    db.delete(analysis)
+    db.commit()
+
+    return True

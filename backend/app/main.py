@@ -7,8 +7,9 @@ from backend.app.database import get_db
 from backend.app.crud import (
     create_analysis,
     create_user,
+    delete_analysis_by_id_for_user,
     get_analyses_by_user,
-        get_analysis_by_id_for_user,
+    get_analysis_by_id_for_user,
     get_user_by_email,
 )
 from backend.app.models import Analysis, User
@@ -235,6 +236,34 @@ def read_analysis_detail(
         )
 
     return AnalysisResponse.model_validate(analysis)
+
+
+@app.delete(
+    "/history/{analysis_id}",
+    status_code=204,
+    summary="Delete analysis",
+    description="Delete a specific analysis owned by the authenticated user.",
+)
+def delete_analysis(
+    analysis_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    """Delete one analysis belonging to the authenticated user."""
+
+    deleted = delete_analysis_by_id_for_user(
+        db,
+        current_user.id,
+        analysis_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Analysis not found.",
+        )
+
+    return None
 
 @app.post(
     "/predict",
