@@ -805,7 +805,11 @@ def test_history_endpoint_returns_current_user_analyses(
 
     requested_user_id: dict[str, int] = {}
 
-    def fake_get_analyses_by_user(db, user_id: int):
+    def fake_get_analyses_by_user(
+        db,
+        user_id: int,
+        prediction=None,
+    ):
         requested_user_id["value"] = user_id
         return analyses
 
@@ -815,12 +819,67 @@ def test_history_endpoint_returns_current_user_analyses(
         fake_get_analyses_by_user,
     )
 
+
     response = client.get("/history")
 
     assert response.status_code == 200
     assert requested_user_id["value"] == 1
     assert response.json() == analyses
 
+
+def test_history_endpoint_filters_by_prediction(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Filter analysis history by prediction."""
+
+    analyses = [
+        {
+            "id": 2,
+            "premise": "Water freezes at zero degrees Celsius.",
+            "hypothesis": "Water can become ice.",
+            "prediction": "ENTAILMENT",
+            "confidence": 0.95,
+            "entailment_score": 0.95,
+            "neutral_score": 0.03,
+            "contradiction_score": 0.02,
+            "created_at": "2026-08-25T10:00:00",
+        }
+    ]
+
+    requested_values = {}
+
+    def fake_get_analyses_by_user(
+        db,
+        user_id: int,
+        prediction=None,
+    ):
+        requested_values["user_id"] = user_id
+        requested_values["prediction"] = prediction
+        return analyses
+
+    monkeypatch.setattr(
+        main_module,
+        "get_analyses_by_user",
+        fake_get_analyses_by_user,
+    )
+
+    response = client.get("/history?prediction=ENTAILMENT")
+
+    assert response.status_code == 200
+    assert requested_values["user_id"] == 1
+    assert requested_values["prediction"] == "ENTAILMENT"
+    assert response.json() == analyses
+
+
+def test_history_endpoint_rejects_invalid_prediction(
+    mock_model_service: FakeModelService,
+) -> None:
+    """Reject unsupported prediction filters."""
+
+    response = client.get("/history?prediction=UNKNOWN")
+
+    assert response.status_code == 422
 
 def test_history_endpoint_rejects_missing_token() -> None:
     """Reject access to history without a Bearer token."""

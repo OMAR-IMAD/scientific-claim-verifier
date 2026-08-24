@@ -31,6 +31,7 @@ from backend.app.schemas import (
     UserResponse,
     TokenResponse,
     UserLogin,
+    PredictionLabel,
 )
 
 
@@ -203,12 +204,17 @@ def read_current_user(
     description="Return previous analyses for the authenticated user.",
 )
 def read_analysis_history(
+    prediction: PredictionLabel | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[AnalysisResponse]:
     """Return the authenticated user's previous analyses."""
 
-    return get_analyses_by_user(db, current_user.id)
+    return get_analyses_by_user(
+        db,
+        current_user.id,
+        prediction,
+    )
 
 @app.get(
     "/history/{analysis_id}",

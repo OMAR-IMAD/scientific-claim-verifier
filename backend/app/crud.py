@@ -67,17 +67,23 @@ def create_analysis(
 def get_analyses_by_user(
     db: Session,
     user_id: int,
+    prediction: str | None = None,
 ) -> list[Analysis]:
-    """Return analyses for a specific user."""
+    """Return analyses for a specific user with optional prediction filtering."""
 
-    statement = (
-    select(Analysis)
-    .where(Analysis.user_id == user_id)
-    .order_by(
+    statement = select(Analysis).where(
+        Analysis.user_id == user_id
+    )
+
+    if prediction is not None:
+        statement = statement.where(
+            Analysis.prediction == prediction
+        )
+
+    statement = statement.order_by(
         Analysis.created_at.desc(),
         Analysis.id.desc(),
     )
-)
 
     return list(db.scalars(statement).all())
 
@@ -95,7 +101,6 @@ def get_analysis_by_id_for_user(
     )
 
     return db.scalar(statement)
-
 
 def delete_analysis_by_id_for_user(
     db: Session,
