@@ -1,6 +1,6 @@
 """Database CRUD operations."""
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from backend.app.models import Analysis, User
@@ -68,6 +68,7 @@ def get_analyses_by_user(
     db: Session,
     user_id: int,
     prediction: str | None = None,
+    search: str | None = None,
 ) -> list[Analysis]:
     """Return analyses for a specific user with optional prediction filtering."""
 
@@ -78,6 +79,15 @@ def get_analyses_by_user(
     if prediction is not None:
         statement = statement.where(
             Analysis.prediction == prediction
+        )
+
+    if search is not None and search.strip():
+        search_pattern = f"%{search.strip()}%"
+        statement = statement.where(
+            or_(
+                Analysis.premise.ilike(search_pattern),
+                Analysis.hypothesis.ilike(search_pattern),
+            )
         )
 
     statement = statement.order_by(

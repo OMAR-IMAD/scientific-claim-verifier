@@ -205,6 +205,7 @@ def read_current_user(
 )
 def read_analysis_history(
     prediction: PredictionLabel | None = None,
+    search: str | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[AnalysisResponse]:
@@ -214,6 +215,7 @@ def read_analysis_history(
         db,
         current_user.id,
         prediction,
+        search,
     )
 
 @app.get(
