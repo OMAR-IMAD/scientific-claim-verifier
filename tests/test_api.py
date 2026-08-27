@@ -964,6 +964,35 @@ def test_history_endpoint_applies_pagination(
     assert requested_values["limit"] == 10
     assert response.json() == []
 
+def test_history_endpoint_rejects_negative_skip(
+    mock_model_service: FakeModelService,
+) -> None:
+    """Reject negative pagination skip values."""
+
+    response = client.get("/history?skip=-1")
+
+    assert response.status_code == 422
+
+
+def test_history_endpoint_rejects_zero_limit(
+    mock_model_service: FakeModelService,
+) -> None:
+    """Reject zero pagination limit values."""
+
+    response = client.get("/history?limit=0")
+
+    assert response.status_code == 422
+
+
+def test_history_endpoint_rejects_limit_above_maximum(
+    mock_model_service: FakeModelService,
+) -> None:
+    """Reject pagination limit values above the maximum."""
+
+    response = client.get("/history?limit=101")
+
+    assert response.status_code == 422
+
 def test_history_endpoint_rejects_invalid_prediction(
     mock_model_service: FakeModelService,
 ) -> None:

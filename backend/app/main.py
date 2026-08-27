@@ -1,6 +1,6 @@
 """Main FastAPI application for the Scientific Claim Verifier."""
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from backend.app.database import get_db
@@ -206,8 +206,8 @@ def read_current_user(
 def read_analysis_history(
     prediction: PredictionLabel | None = None,
     search: str | None = None,
-    skip: int = 0,
-    limit: int = 20,
+    skip: int = Query(0, ge=0),
+       limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[AnalysisResponse]:
