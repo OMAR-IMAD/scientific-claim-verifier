@@ -69,6 +69,8 @@ def get_analyses_by_user(
     user_id: int,
     prediction: str | None = None,
     search: str | None = None,
+    skip: int = 0,
+    limit: int = 20,
 ) -> list[Analysis]:
     """Return analyses for a specific user with optional prediction filtering."""
 
@@ -94,6 +96,9 @@ def get_analyses_by_user(
         Analysis.created_at.desc(),
         Analysis.id.desc(),
     )
+
+
+    statement = statement.offset(skip).limit(limit)
 
     return list(db.scalars(statement).all())
 

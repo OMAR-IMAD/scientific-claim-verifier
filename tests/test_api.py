@@ -806,11 +806,13 @@ def test_history_endpoint_returns_current_user_analyses(
     requested_user_id: dict[str, int] = {}
 
     def fake_get_analyses_by_user(
-        db,
-        user_id: int,
-        prediction=None,
-        search=None,
-    ):
+    db,
+    user_id: int,
+    prediction=None,
+    search=None,
+    skip=0,
+    limit=20,
+):
         requested_user_id["value"] = user_id
         return analyses
 
@@ -851,11 +853,13 @@ def test_history_endpoint_filters_by_prediction(
     requested_values = {}
 
     def fake_get_analyses_by_user(
-        db,
-        user_id: int,
-        prediction=None,
-        search=None,
-    ):
+    db,
+    user_id: int,
+    prediction=None,
+    search=None,
+    skip=0,
+    limit=20,
+):
         requested_values["user_id"] = user_id
         requested_values["prediction"] = prediction
         return analyses
@@ -897,11 +901,14 @@ def test_history_endpoint_filters_by_search(
     requested_values = {}
 
     def fake_get_analyses_by_user(
-        db,
-        user_id: int,
-        prediction=None,
-        search=None,
-    ):
+    db,
+    user_id: int,
+    prediction=None,
+    search=None,
+    skip=0,
+    limit=20,
+):
+
         requested_values["user_id"] = user_id
         requested_values["prediction"] = prediction
         requested_values["search"] = search
@@ -920,6 +927,42 @@ def test_history_endpoint_filters_by_search(
     assert requested_values["prediction"] is None
     assert requested_values["search"] == "water"
     assert response.json() == analyses
+
+
+def test_history_endpoint_applies_pagination(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Pass pagination parameters to analysis history."""
+
+    requested_values = {}
+
+    def fake_get_analyses_by_user(
+        db,
+        user_id: int,
+        prediction=None,
+        search=None,
+        skip=0,
+        limit=20,
+    ):
+        requested_values["user_id"] = user_id
+        requested_values["skip"] = skip
+        requested_values["limit"] = limit
+        return []
+
+    monkeypatch.setattr(
+        main_module,
+        "get_analyses_by_user",
+        fake_get_analyses_by_user,
+    )
+
+    response = client.get("/history?skip=5&limit=10")
+
+    assert response.status_code == 200
+    assert requested_values["user_id"] == 1
+    assert requested_values["skip"] == 5
+    assert requested_values["limit"] == 10
+    assert response.json() == []
 
 def test_history_endpoint_rejects_invalid_prediction(
     mock_model_service: FakeModelService,
