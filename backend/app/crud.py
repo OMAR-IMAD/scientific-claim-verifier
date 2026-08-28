@@ -69,6 +69,7 @@ def get_analyses_by_user(
     user_id: int,
     prediction: str | None = None,
     search: str | None = None,
+       sort_order: str = "newest",
     skip: int = 0,
     limit: int = 20,
 ) -> list[Analysis]:
@@ -92,11 +93,16 @@ def get_analyses_by_user(
             )
         )
 
-    statement = statement.order_by(
-        Analysis.created_at.desc(),
-        Analysis.id.desc(),
-    )
-
+    if sort_order == "oldest":
+        statement = statement.order_by(
+            Analysis.created_at.asc(),
+            Analysis.id.asc(),
+        )
+    else:
+        statement = statement.order_by(
+            Analysis.created_at.desc(),
+            Analysis.id.desc(),
+        )
 
     statement = statement.offset(skip).limit(limit)
 

@@ -810,6 +810,7 @@ def test_history_endpoint_returns_current_user_analyses(
     user_id: int,
     prediction=None,
     search=None,
+    sort_order="newest",
     skip=0,
     limit=20,
 ):
@@ -857,6 +858,7 @@ def test_history_endpoint_filters_by_prediction(
     user_id: int,
     prediction=None,
     search=None,
+    sort_order="newest",
     skip=0,
     limit=20,
 ):
@@ -905,6 +907,7 @@ def test_history_endpoint_filters_by_search(
     user_id: int,
     prediction=None,
     search=None,
+    sort_order="newest",
     skip=0,
     limit=20,
 ):
@@ -942,10 +945,12 @@ def test_history_endpoint_applies_pagination(
         user_id: int,
         prediction=None,
         search=None,
+        sort_order="newest",
         skip=0,
         limit=20,
     ):
         requested_values["user_id"] = user_id
+        requested_values["sort_order"] = sort_order
         requested_values["skip"] = skip
         requested_values["limit"] = limit
         return []
@@ -960,6 +965,7 @@ def test_history_endpoint_applies_pagination(
 
     assert response.status_code == 200
     assert requested_values["user_id"] == 1
+    assert requested_values["sort_order"] == "newest"
     assert requested_values["skip"] == 5
     assert requested_values["limit"] == 10
     assert response.json() == []
