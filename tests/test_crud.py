@@ -107,3 +107,47 @@ def test_create_and_get_analyses_by_user(db: Session):
     assert len(analyses) == 2
     assert analyses[0].prediction == "NEUTRAL"
     assert analyses[1].prediction == "ENTAILMENT"
+
+
+def test_get_analyses_by_user_oldest_order(db: Session):
+    """Return the oldest analysis first when oldest sorting is requested."""
+
+    user = create_user(
+        db,
+        "sorting@example.com",
+        "hashed_password",
+    )
+
+    create_analysis(
+        db,
+        user.id,
+        "Old premise",
+        "Old hypothesis",
+        "ENTAILMENT",
+        0.90,
+        0.90,
+        0.08,
+        0.02,
+    )
+
+    create_analysis(
+        db,
+        user.id,
+        "New premise",
+        "New hypothesis",
+        "NEUTRAL",
+        0.70,
+        0.20,
+        0.70,
+        0.10,
+    )
+
+    analyses = get_analyses_by_user(
+        db,
+        user.id,
+        sort_order="oldest",
+    )
+
+    assert len(analyses) == 2
+    assert analyses[0].prediction == "ENTAILMENT"
+    assert analyses[1].prediction == "NEUTRAL"
