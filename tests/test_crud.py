@@ -9,6 +9,7 @@ from backend.app.crud import (
     create_analysis,
     create_user,
     get_analyses_by_user,
+    get_analysis_stats_by_user,
     get_user_by_email,
 )
 from backend.app.database import Base
@@ -151,3 +152,68 @@ def test_get_analyses_by_user_oldest_order(db: Session):
     assert len(analyses) == 2
     assert analyses[0].prediction == "ENTAILMENT"
     assert analyses[1].prediction == "NEUTRAL"
+
+
+def test_get_analysis_stats_by_user(db: Session):
+    """Return total and prediction counts for a specific user."""
+
+    user = create_user(
+        db,
+        "stats@example.com",
+        "hashed_password",
+    )
+
+    create_analysis(
+        db,
+        user.id,
+        "Premise 1",
+        "Hypothesis 1",
+        "ENTAILMENT",
+        0.90,
+        0.90,
+        0.08,
+        0.02,
+    )
+
+    create_analysis(
+        db,
+        user.id,
+        "Premise 2",
+        "Hypothesis 2",
+        "ENTAILMENT",
+        0.85,
+        0.85,
+        0.10,
+        0.05,
+    )
+
+    create_analysis(
+        db,
+        user.id,
+        "Premise 3",
+        "Hypothesis 3",
+        "NEUTRAL",
+        0.70,
+        0.20,
+        0.70,
+        0.10,
+    )
+
+    create_analysis(
+        db,
+        user.id,
+        "Premise 4",
+        "Hypothesis 4",
+        "CONTRADICTION",
+        0.95,
+        0.02,
+        0.03,
+        0.95,
+    )
+
+    stats = get_analysis_stats_by_user(db, user.id)
+
+    assert stats["total"] == 4
+    assert stats["ENTAILMENT"] == 2
+    assert stats["NEUTRAL"] == 1
+    assert stats["CONTRADICTION"] == 1

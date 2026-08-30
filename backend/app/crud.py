@@ -1,6 +1,6 @@
 """Database CRUD operations."""
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from backend.app.models import Analysis, User
@@ -143,3 +143,34 @@ def delete_analysis_by_id_for_user(
     db.commit()
 
     return True
+
+
+def get_analysis_stats_by_user(
+    db: Session,
+    user_id: int,
+) -> dict[str, int]:
+    """Return analysis statistics for a specific user."""
+
+    statement = (
+        select(
+            Analysis.prediction,
+            func.count(Analysis.id),
+        )
+        .where(Analysis.user_id == user_id)
+        .group_by(Analysis.prediction)
+    )
+
+    rows = db.execute(statement).all()
+
+    stats = {
+        "total": 0,
+        "ENTAILMENT": 0,
+        "CONTRADICTION": 0,
+        "NEUTRAL": 0,
+    }
+
+    for prediction, count in rows:
+        stats[prediction] = count
+        stats["total"] += count
+
+    return stats
