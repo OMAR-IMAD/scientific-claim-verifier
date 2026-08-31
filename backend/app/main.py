@@ -10,6 +10,7 @@ from backend.app.crud import (
     delete_analysis_by_id_for_user,
     get_analyses_by_user,
     get_analysis_by_id_for_user,
+    get_analysis_stats_by_user,
     get_user_by_email,
 )
 from backend.app.models import Analysis, User
@@ -21,7 +22,8 @@ from backend.app.security import (
     verify_password,
 )
 from backend.app.schemas import (
-      AnalysisResponse,
+    AnalysisResponse,
+    DashboardStatsResponse,
     ErrorResponse,
     HealthResponse,
     PredictionRequest,
@@ -223,6 +225,21 @@ def read_analysis_history(
     skip,
     limit,
 )
+
+
+@app.get(
+    "/dashboard/stats",
+    response_model=DashboardStatsResponse,
+    summary="Read dashboard statistics",
+    description="Return analysis statistics for the authenticated user.",
+)
+def read_dashboard_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> DashboardStatsResponse:
+    """Return dashboard statistics for the authenticated user."""
+
+    return get_analysis_stats_by_user(db, current_user.id)
 
 @app.get(
     "/history/{analysis_id}",

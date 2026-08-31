@@ -257,3 +257,12 @@ class TokenResponse(BaseModel):
 
     access_token: str
     token_type: Literal["bearer"] = "bearer"
+
+
+class DashboardStatsResponse(BaseModel):
+    """Analysis statistics returned for the dashboard."""
+
+    total: int
+    ENTAILMENT: int
+    CONTRADICTION: int
+    NEUTRAL: int

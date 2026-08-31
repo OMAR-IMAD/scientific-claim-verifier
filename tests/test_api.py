@@ -1132,3 +1132,38 @@ def test_history_delete_returns_404_when_analysis_not_found(
     assert response.json() == {
         "detail": "Analysis not found.",
     }
+
+
+def test_dashboard_stats_endpoint_returns_current_user_stats(
+    mock_model_service: FakeModelService,
+    monkeypatch,
+) -> None:
+    """Return dashboard statistics for the authenticated user."""
+
+    stats = {
+        "total": 4,
+        "ENTAILMENT": 2,
+        "CONTRADICTION": 1,
+        "NEUTRAL": 1,
+    }
+
+    requested_user_id: dict[str, int] = {}
+
+    def fake_get_analysis_stats_by_user(
+        db,
+        user_id: int,
+    ):
+        requested_user_id["value"] = user_id
+        return stats
+
+    monkeypatch.setattr(
+        main_module,
+        "get_analysis_stats_by_user",
+        fake_get_analysis_stats_by_user,
+    )
+
+    response = client.get("/dashboard/stats")
+
+    assert response.status_code == 200
+    assert requested_user_id["value"] == 1
+    assert response.json() == stats
