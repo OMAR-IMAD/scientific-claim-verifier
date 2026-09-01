@@ -1145,6 +1145,9 @@ def test_dashboard_stats_endpoint_returns_current_user_stats(
         "ENTAILMENT": 2,
         "CONTRADICTION": 1,
         "NEUTRAL": 1,
+        "entailment_percentage": 50.0,
+        "contradiction_percentage": 25.0,
+        "neutral_percentage": 25.0,
     }
 
     requested_user_id: dict[str, int] = {}

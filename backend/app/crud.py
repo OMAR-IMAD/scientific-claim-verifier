@@ -148,7 +148,7 @@ def delete_analysis_by_id_for_user(
 def get_analysis_stats_by_user(
     db: Session,
     user_id: int,
-) -> dict[str, int]:
+) -> dict[str, int | float]:
     """Return analysis statistics for a specific user."""
 
     statement = (
@@ -172,5 +172,23 @@ def get_analysis_stats_by_user(
     for prediction, count in rows:
         stats[prediction] = count
         stats["total"] += count
+
+    if stats["total"] > 0:
+        stats["entailment_percentage"] = round(
+            stats["ENTAILMENT"] / stats["total"] * 100,
+            2,
+        )
+        stats["contradiction_percentage"] = round(
+            stats["CONTRADICTION"] / stats["total"] * 100,
+            2,
+        )
+        stats["neutral_percentage"] = round(
+            stats["NEUTRAL"] / stats["total"] * 100,
+            2,
+        )
+    else:
+        stats["entailment_percentage"] = 0.0
+        stats["contradiction_percentage"] = 0.0
+        stats["neutral_percentage"] = 0.0
 
     return stats

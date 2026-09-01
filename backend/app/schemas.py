@@ -266,3 +266,6 @@ class DashboardStatsResponse(BaseModel):
     ENTAILMENT: int
     CONTRADICTION: int
     NEUTRAL: int
+    entailment_percentage: float
+    contradiction_percentage: float
+    neutral_percentage: float

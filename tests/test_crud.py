@@ -217,3 +217,6 @@ def test_get_analysis_stats_by_user(db: Session):
     assert stats["ENTAILMENT"] == 2
     assert stats["NEUTRAL"] == 1
     assert stats["CONTRADICTION"] == 1
+    assert stats["entailment_percentage"] == 50.0
+    assert stats["neutral_percentage"] == 25.0
+    assert stats["contradiction_percentage"] == 25.0
