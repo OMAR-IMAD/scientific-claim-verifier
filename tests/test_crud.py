@@ -220,3 +220,23 @@ def test_get_analysis_stats_by_user(db: Session):
     assert stats["entailment_percentage"] == 50.0
     assert stats["neutral_percentage"] == 25.0
     assert stats["contradiction_percentage"] == 25.0
+
+
+def test_get_analysis_stats_by_user_with_no_analyses(db: Session):
+    """Return zero statistics when the user has no analyses."""
+
+    user = create_user(
+        db,
+        "empty_stats@example.com",
+        "hashed_password",
+    )
+
+    stats = get_analysis_stats_by_user(db, user.id)
+
+    assert stats["total"] == 0
+    assert stats["ENTAILMENT"] == 0
+    assert stats["CONTRADICTION"] == 0
+    assert stats["NEUTRAL"] == 0
+    assert stats["entailment_percentage"] == 0.0
+    assert stats["contradiction_percentage"] == 0.0
+    assert stats["neutral_percentage"] == 0.0
