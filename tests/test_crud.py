@@ -240,3 +240,65 @@ def test_get_analysis_stats_by_user_with_no_analyses(db: Session):
     assert stats["entailment_percentage"] == 0.0
     assert stats["contradiction_percentage"] == 0.0
     assert stats["neutral_percentage"] == 0.0
+
+
+def test_get_analysis_stats_are_isolated_between_users(db: Session):
+    """Return statistics only for the requested user."""
+
+    user_one = create_user(
+        db,
+        "stats_user_one@example.com",
+        "hashed_password",
+    )
+
+    user_two = create_user(
+        db,
+        "stats_user_two@example.com",
+        "hashed_password",
+    )
+
+    create_analysis(
+        db,
+        user_one.id,
+        "User one premise",
+        "User one hypothesis",
+        "ENTAILMENT",
+        0.90,
+        0.90,
+        0.05,
+        0.05,
+    )
+
+    create_analysis(
+        db,
+        user_two.id,
+        "User two premise 1",
+        "User two hypothesis 1",
+        "CONTRADICTION",
+        0.95,
+        0.02,
+        0.03,
+        0.95,
+    )
+
+    create_analysis(
+        db,
+        user_two.id,
+        "User two premise 2",
+        "User two hypothesis 2",
+        "CONTRADICTION",
+        0.92,
+        0.03,
+        0.05,
+        0.92,
+    )
+
+    stats = get_analysis_stats_by_user(db, user_one.id)
+
+    assert stats["total"] == 1
+    assert stats["ENTAILMENT"] == 1
+    assert stats["CONTRADICTION"] == 0
+    assert stats["NEUTRAL"] == 0
+    assert stats["entailment_percentage"] == 100.0
+    assert stats["contradiction_percentage"] == 0.0
+    assert stats["neutral_percentage"] == 0.0
