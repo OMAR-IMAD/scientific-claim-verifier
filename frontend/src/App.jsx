@@ -1,9 +1,59 @@
 import { useState } from 'react'
 import './App.css'
 
+const API_BASE_URL = 'http://127.0.0.1:8000'
+
 function App() {
   const [premise, setPremise] = useState('')
   const [hypothesis, setHypothesis] = useState('')
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleVerify = async () => {
+    setError('')
+    setResult(null)
+
+    if (!premise.trim() || !hypothesis.trim()) {
+      setError('Please enter both premise and hypothesis.')
+      return
+    }
+
+    const token = localStorage.getItem('access_token')
+
+    if (!token) {
+      setError('No access token found. Please log in first.')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/predict`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          premise: premise.trim(),
+          hypothesis: hypothesis.trim(),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Prediction request failed.')
+      }
+
+      setResult(data)
+    } catch (err) {
+      setError(err.message || 'Unable to connect to the backend.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <main className="app">
@@ -42,9 +92,42 @@ function App() {
             />
           </div>
 
-          <button type="button">
-            Verify Claim
+          <button
+            type="button"
+            onClick={handleVerify}
+            disabled={loading}
+          >
+            {loading ? 'Verifying...' : 'Verify Claim'}
           </button>
+
+          {error && (
+            <p className="error-message">
+              {error}
+            </p>
+          )}
+
+          {result && (
+            <div className="result-card">
+              <h2>{result.prediction}</h2>
+
+              <p>
+                Confidence: {(result.confidence * 100).toFixed(2)}%
+              </p>
+
+              <p>
+                Entailment: {(result.scores.ENTAILMENT * 100).toFixed(2)}%
+              </p>
+
+              <p>
+                Neutral: {(result.scores.NEUTRAL * 100).toFixed(2)}%
+              </p>
+
+              <p>
+                Contradiction:{' '}
+                {(result.scores.CONTRADICTION * 100).toFixed(2)}%
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </main>
