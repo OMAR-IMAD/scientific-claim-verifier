@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './App.css'
+import { verifyClaim } from './services/api'
 
-const API_BASE_URL = 'http://127.0.0.1:8000'
 
 function App() {
   const [premise, setPremise] = useState('')
@@ -11,49 +11,25 @@ function App() {
   const [loading, setLoading] = useState(false)
 
   const handleVerify = async () => {
-    setError('')
-    setResult(null)
+  setError('')
+  setResult(null)
 
-    if (!premise.trim() || !hypothesis.trim()) {
-      setError('Please enter both premise and hypothesis.')
-      return
-    }
-
-    const token = localStorage.getItem('access_token')
-
-    if (!token) {
-      setError('No access token found. Please log in first.')
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/predict`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          premise: premise.trim(),
-          hypothesis: hypothesis.trim(),
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Prediction request failed.')
-      }
-
-      setResult(data)
-    } catch (err) {
-      setError(err.message || 'Unable to connect to the backend.')
-    } finally {
-      setLoading(false)
-    }
+  if (!premise.trim() || !hypothesis.trim()) {
+    setError('Please enter both premise and hypothesis.')
+    return
   }
+
+  setLoading(true)
+
+  try {
+    const data = await verifyClaim(premise, hypothesis)
+    setResult(data)
+  } catch (err) {
+    setError(err.message || 'Unable to connect to the backend.')
+  } finally {
+    setLoading(false)
+  }
+}
 
   return (
     <main className="app">
