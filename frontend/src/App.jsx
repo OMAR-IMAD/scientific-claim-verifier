@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import { verifyClaim } from './services/api'
+import { loginUser, verifyClaim } from './services/api'
 
 
 function App() {
@@ -10,7 +10,34 @@ function App() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleVerify = async () => {
+   const [email, setEmail] = useState('')
+   const [password, setPassword] = useState('')
+   const [loginLoading, setLoginLoading] = useState(false)
+   const [loginMessage, setLoginMessage] = useState('')
+
+
+const handleLogin = async () => {
+  setLoginMessage('')
+
+  if (!email.trim() || !password) {
+    setLoginMessage('Please enter email and password.')
+    return
+  }
+
+  setLoginLoading(true)
+
+  try {
+    await loginUser(email, password)
+    setLoginMessage('Login successful.')
+    setPassword('')
+  } catch (err) {
+    setLoginMessage(err.message || 'Login failed.')
+  } finally {
+    setLoginLoading(false)
+  }
+}
+
+const handleVerify = async () => {
   setError('')
   setResult(null)
 
@@ -42,6 +69,44 @@ function App() {
           Analyze a scientific premise and hypothesis to classify their
           relationship as Entailment, Contradiction, or Neutral.
         </p>
+
+<div className="login-form">
+  <div className="form-group">
+    <label htmlFor="email">Email</label>
+    <input
+      id="email"
+      type="email"
+      value={email}
+      onChange={(event) => setEmail(event.target.value)}
+      placeholder="Enter your email..."
+    />
+  </div>
+
+  <div className="form-group">
+    <label htmlFor="password">Password</label>
+    <input
+      id="password"
+      type="password"
+      value={password}
+      onChange={(event) => setPassword(event.target.value)}
+      placeholder="Enter your password..."
+    />
+  </div>
+
+  <button
+    type="button"
+    onClick={handleLogin}
+    disabled={loginLoading}
+  >
+    {loginLoading ? 'Logging in...' : 'Login'}
+  </button>
+
+  {loginMessage && (
+    <p className="login-message">
+      {loginMessage}
+    </p>
+  )}
+</div>
 
         <div className="verification-form">
           <div className="form-group">
