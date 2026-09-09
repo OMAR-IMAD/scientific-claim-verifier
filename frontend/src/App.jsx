@@ -14,7 +14,9 @@ function App() {
    const [password, setPassword] = useState('')
    const [loginLoading, setLoginLoading] = useState(false)
    const [loginMessage, setLoginMessage] = useState('')
-
+      const [isLoggedIn, setIsLoggedIn] = useState(
+  Boolean(localStorage.getItem('access_token'))
+)
 
 const handleLogin = async () => {
   setLoginMessage('')
@@ -28,6 +30,7 @@ const handleLogin = async () => {
 
   try {
     await loginUser(email, password)
+        setIsLoggedIn(true)
     setLoginMessage('Login successful.')
     setPassword('')
   } catch (err) {
@@ -35,6 +38,17 @@ const handleLogin = async () => {
   } finally {
     setLoginLoading(false)
   }
+}
+
+
+const handleLogout = () => {
+  localStorage.removeItem('access_token')
+  setIsLoggedIn(false)
+  setLoginMessage('Logged out successfully.')
+  setEmail('')
+  setPassword('')
+  setResult(null)
+  setError('')
 }
 
 const handleVerify = async () => {
@@ -70,43 +84,56 @@ const handleVerify = async () => {
           relationship as Entailment, Contradiction, or Neutral.
         </p>
 
-<div className="login-form">
-  <div className="form-group">
-    <label htmlFor="email">Email</label>
-    <input
-      id="email"
-      type="email"
-      value={email}
-      onChange={(event) => setEmail(event.target.value)}
-      placeholder="Enter your email..."
-    />
+{!isLoggedIn ? (
+  <div className="login-form">
+    <div className="form-group">
+      <label htmlFor="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        placeholder="Enter your email..."
+      />
+    </div>
+
+    <div className="form-group">
+      <label htmlFor="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        placeholder="Enter your password..."
+      />
+    </div>
+
+    <button
+      type="button"
+      onClick={handleLogin}
+      disabled={loginLoading}
+    >
+      {loginLoading ? 'Logging in...' : 'Login'}
+    </button>
+
+    {loginMessage && (
+      <p className="login-message">
+        {loginMessage}
+      </p>
+    )}
   </div>
+) : (
+  <div className="login-form">
+    <p className="login-message">Logged in.</p>
 
-  <div className="form-group">
-    <label htmlFor="password">Password</label>
-    <input
-      id="password"
-      type="password"
-      value={password}
-      onChange={(event) => setPassword(event.target.value)}
-      placeholder="Enter your password..."
-    />
+    <button
+      type="button"
+      onClick={handleLogout}
+    >
+      Logout
+    </button>
   </div>
-
-  <button
-    type="button"
-    onClick={handleLogin}
-    disabled={loginLoading}
-  >
-    {loginLoading ? 'Logging in...' : 'Login'}
-  </button>
-
-  {loginMessage && (
-    <p className="login-message">
-      {loginMessage}
-    </p>
-  )}
-</div>
+)}
 
         <div className="verification-form">
           <div className="form-group">
