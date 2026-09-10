@@ -135,6 +135,7 @@ const handleVerify = async () => {
   </div>
 )}
 
+{isLoggedIn && (
         <div className="verification-form">
           <div className="form-group">
             <label htmlFor="premise">Premise</label>
@@ -197,6 +198,7 @@ const handleVerify = async () => {
             </div>
           )}
         </div>
+            )}
       </section>
     </main>
   )
