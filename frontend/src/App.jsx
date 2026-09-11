@@ -2,7 +2,6 @@ import { useState } from 'react'
 import './App.css'
 import { loginUser, verifyClaim } from './services/api'
 
-
 function App() {
   const [premise, setPremise] = useState('')
   const [hypothesis, setHypothesis] = useState('')
@@ -10,67 +9,81 @@ function App() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-   const [email, setEmail] = useState('')
-   const [password, setPassword] = useState('')
-   const [loginLoading, setLoginLoading] = useState(false)
-   const [loginMessage, setLoginMessage] = useState('')
-      const [isLoggedIn, setIsLoggedIn] = useState(
-  Boolean(localStorage.getItem('access_token'))
-)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginMessage, setLoginMessage] = useState('')
 
-const handleLogin = async () => {
-  setLoginMessage('')
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    Boolean(localStorage.getItem('access_token'))
+  )
 
-  if (!email.trim() || !password) {
-    setLoginMessage('Please enter email and password.')
-    return
+  const [loggedInEmail, setLoggedInEmail] = useState(
+    localStorage.getItem('user_email') || ''
+  )
+
+  const handleLogin = async () => {
+    setLoginMessage('')
+
+    if (!email.trim() || !password) {
+      setLoginMessage('Please enter email and password.')
+      return
+    }
+
+    setLoginLoading(true)
+
+    try {
+      const userEmail = email.trim()
+
+      await loginUser(userEmail, password)
+
+      localStorage.setItem('user_email', userEmail)
+      setLoggedInEmail(userEmail)
+      setIsLoggedIn(true)
+
+      setLoginMessage('Login successful.')
+      setPassword('')
+    } catch (err) {
+      setLoginMessage(err.message || 'Login failed.')
+    } finally {
+      setLoginLoading(false)
+    }
   }
 
-  setLoginLoading(true)
+  const handleLogout = () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user_email')
 
-  try {
-    await loginUser(email, password)
-        setIsLoggedIn(true)
-    setLoginMessage('Login successful.')
+    setIsLoggedIn(false)
+    setLoggedInEmail('')
+
+    setLoginMessage('Logged out successfully.')
+    setEmail('')
     setPassword('')
-  } catch (err) {
-    setLoginMessage(err.message || 'Login failed.')
-  } finally {
-    setLoginLoading(false)
-  }
-}
-
-
-const handleLogout = () => {
-  localStorage.removeItem('access_token')
-  setIsLoggedIn(false)
-  setLoginMessage('Logged out successfully.')
-  setEmail('')
-  setPassword('')
-  setResult(null)
-  setError('')
-}
-
-const handleVerify = async () => {
-  setError('')
-  setResult(null)
-
-  if (!premise.trim() || !hypothesis.trim()) {
-    setError('Please enter both premise and hypothesis.')
-    return
+    setResult(null)
+    setError('')
   }
 
-  setLoading(true)
+  const handleVerify = async () => {
+    setError('')
+    setResult(null)
 
-  try {
-    const data = await verifyClaim(premise, hypothesis)
-    setResult(data)
-  } catch (err) {
-    setError(err.message || 'Unable to connect to the backend.')
-  } finally {
-    setLoading(false)
+    if (!premise.trim() || !hypothesis.trim()) {
+      setError('Please enter both premise and hypothesis.')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const data = await verifyClaim(premise, hypothesis)
+      setResult(data)
+    } catch (err) {
+      setError(err.message || 'Unable to connect to the backend.')
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   return (
     <main className="app">
@@ -84,121 +97,125 @@ const handleVerify = async () => {
           relationship as Entailment, Contradiction, or Neutral.
         </p>
 
-{!isLoggedIn ? (
-  <div className="login-form">
-    <div className="form-group">
-      <label htmlFor="email">Email</label>
-      <input
-        id="email"
-        type="email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        placeholder="Enter your email..."
-      />
-    </div>
+        {!isLoggedIn ? (
+          <div className="login-form">
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
 
-    <div className="form-group">
-      <label htmlFor="password">Password</label>
-      <input
-        id="password"
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        placeholder="Enter your password..."
-      />
-    </div>
-
-    <button
-      type="button"
-      onClick={handleLogin}
-      disabled={loginLoading}
-    >
-      {loginLoading ? 'Logging in...' : 'Login'}
-    </button>
-
-    {loginMessage && (
-      <p className="login-message">
-        {loginMessage}
-      </p>
-    )}
-  </div>
-) : (
-  <div className="login-form">
-    <p className="login-message">Logged in.</p>
-
-    <button
-      type="button"
-      onClick={handleLogout}
-    >
-      Logout
-    </button>
-  </div>
-)}
-
-{isLoggedIn && (
-        <div className="verification-form">
-          <div className="form-group">
-            <label htmlFor="premise">Premise</label>
-
-            <textarea
-              id="premise"
-              value={premise}
-              onChange={(event) => setPremise(event.target.value)}
-              placeholder="Enter the scientific premise..."
-              rows="4"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="hypothesis">Hypothesis</label>
-
-            <textarea
-              id="hypothesis"
-              value={hypothesis}
-              onChange={(event) => setHypothesis(event.target.value)}
-              placeholder="Enter the hypothesis to verify..."
-              rows="4"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleVerify}
-            disabled={loading}
-          >
-            {loading ? 'Verifying...' : 'Verify Claim'}
-          </button>
-
-          {error && (
-            <p className="error-message">
-              {error}
-            </p>
-          )}
-
-          {result && (
-            <div className="result-card">
-              <h2>{result.prediction}</h2>
-
-              <p>
-                Confidence: {(result.confidence * 100).toFixed(2)}%
-              </p>
-
-              <p>
-                Entailment: {(result.scores.ENTAILMENT * 100).toFixed(2)}%
-              </p>
-
-              <p>
-                Neutral: {(result.scores.NEUTRAL * 100).toFixed(2)}%
-              </p>
-
-              <p>
-                Contradiction:{' '}
-                {(result.scores.CONTRADICTION * 100).toFixed(2)}%
-              </p>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Enter your email..."
+              />
             </div>
-          )}
-        </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter your password..."
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogin}
+              disabled={loginLoading}
+            >
+              {loginLoading ? 'Logging in...' : 'Login'}
+            </button>
+
+            {loginMessage && (
+              <p className="login-message">
+                {loginMessage}
+              </p>
             )}
+          </div>
+        ) : (
+          <div className="login-form">
+            <p className="login-message">
+              Logged in as: {loggedInEmail}
+            </p>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </div>
+        )}
+
+        {isLoggedIn && (
+          <div className="verification-form">
+            <div className="form-group">
+              <label htmlFor="premise">Premise</label>
+
+              <textarea
+                id="premise"
+                value={premise}
+                onChange={(event) => setPremise(event.target.value)}
+                placeholder="Enter the scientific premise..."
+                rows="4"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="hypothesis">Hypothesis</label>
+
+              <textarea
+                id="hypothesis"
+                value={hypothesis}
+                onChange={(event) => setHypothesis(event.target.value)}
+                placeholder="Enter the hypothesis to verify..."
+                rows="4"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleVerify}
+              disabled={loading}
+            >
+              {loading ? 'Verifying...' : 'Verify Claim'}
+            </button>
+
+            {error && (
+              <p className="error-message">
+                {error}
+              </p>
+            )}
+
+            {result && (
+              <div className="result-card">
+                <h2>{result.prediction}</h2>
+
+                <p>
+                  Confidence: {(result.confidence * 100).toFixed(2)}%
+                </p>
+
+                <p>
+                  Entailment: {(result.scores.ENTAILMENT * 100).toFixed(2)}%
+                </p>
+
+                <p>
+                  Neutral: {(result.scores.NEUTRAL * 100).toFixed(2)}%
+                </p>
+
+                <p>
+                  Contradiction:{' '}
+                  {(result.scores.CONTRADICTION * 100).toFixed(2)}%
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </main>
   )
