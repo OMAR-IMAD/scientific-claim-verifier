@@ -48,10 +48,6 @@ ESLint ve production build testleri başarılı geçti.
 
 
 
-Proje Tamamlanma Oranı: %74.3
-
-
-
 Sonraki Gün İçin Plan
 
 
