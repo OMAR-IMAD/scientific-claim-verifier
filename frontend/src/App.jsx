@@ -209,24 +209,71 @@ function App() {
 
             {result && (
               <div className="result-card">
-                <h2>{result.prediction}</h2>
+                <div className="result-header">
+                  <p className="result-title">Prediction</p>
 
-                <p>
-                  Confidence: {(result.confidence * 100).toFixed(2)}%
-                </p>
+                  <h2>{result.prediction}</h2>
 
-                <p>
-                  Entailment: {(result.scores.ENTAILMENT * 100).toFixed(2)}%
-                </p>
+                  <p className="confidence-value">
+                    Confidence: {(result.confidence * 100).toFixed(2)}%
+                  </p>
+                </div>
 
-                <p>
-                  Neutral: {(result.scores.NEUTRAL * 100).toFixed(2)}%
-                </p>
+                <div className="score-list">
+                  <div className="score-item">
+                    <div className="score-row">
+                      <span>Entailment</span>
+                      <strong>
+                        {(result.scores.ENTAILMENT * 100).toFixed(2)}%
+                      </strong>
+                    </div>
 
-                <p>
-                  Contradiction:{' '}
-                  {(result.scores.CONTRADICTION * 100).toFixed(2)}%
-                </p>
+                    <div className="score-bar">
+                      <div
+                        className="score-fill entailment"
+                        style={{
+                          width: `${result.scores.ENTAILMENT * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="score-item">
+                    <div className="score-row">
+                      <span>Neutral</span>
+                      <strong>
+                        {(result.scores.NEUTRAL * 100).toFixed(2)}%
+                      </strong>
+                    </div>
+
+                    <div className="score-bar">
+                      <div
+                        className="score-fill neutral"
+                        style={{
+                          width: `${result.scores.NEUTRAL * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="score-item">
+                    <div className="score-row">
+                      <span>Contradiction</span>
+                      <strong>
+                        {(result.scores.CONTRADICTION * 100).toFixed(2)}%
+                      </strong>
+                    </div>
+
+                    <div className="score-bar">
+                      <div
+                        className="score-fill contradiction"
+                        style={{
+                          width: `${result.scores.CONTRADICTION * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
