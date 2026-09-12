@@ -85,6 +85,13 @@ function App() {
     }
   }
 
+  const handleClear = () => {
+    setPremise('')
+    setHypothesis('')
+    setResult(null)
+    setError('')
+  }
+
   return (
     <main className="app">
       <section className="hero">
@@ -184,6 +191,14 @@ function App() {
               disabled={loading}
             >
               {loading ? 'Verifying...' : 'Verify Claim'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClear}
+              disabled={loading}
+            >
+              Clear Form
             </button>
 
             {error && (
