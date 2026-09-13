@@ -50,3 +50,26 @@ export async function verifyClaim(premise, hypothesis) {
 
   return data
 }
+
+export async function getAnalysisHistory() {
+  const token = localStorage.getItem('access_token')
+
+  if (!token) {
+    throw new Error('No access token found. Please log in first.')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/history`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to load analysis history.')
+  }
+
+  return data
+}

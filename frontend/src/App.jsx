@@ -1,6 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
-import { loginUser, verifyClaim } from './services/api'
+import {
+  getAnalysisHistory,
+  loginUser,
+  verifyClaim,
+} from './services/api'
 
 function App() {
   const [premise, setPremise] = useState('')
@@ -21,6 +25,45 @@ function App() {
   const [loggedInEmail, setLoggedInEmail] = useState(
     localStorage.getItem('user_email') || ''
   )
+
+  const [analysisHistory, setAnalysisHistory] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState('')
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return
+    }
+
+    let cancelled = false
+
+    const loadHistory = async () => {
+      setHistoryLoading(true)
+      setHistoryError('')
+
+      try {
+        const data = await getAnalysisHistory()
+
+        if (!cancelled) {
+          setAnalysisHistory(Array.isArray(data) ? data : [])
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setHistoryError(err.message || 'Failed to load analysis history.')
+        }
+      } finally {
+        if (!cancelled) {
+          setHistoryLoading(false)
+        }
+      }
+    }
+
+    loadHistory()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isLoggedIn])
 
   const handleLogin = async () => {
     setLoginMessage('')
@@ -62,6 +105,9 @@ function App() {
     setPassword('')
     setResult(null)
     setError('')
+
+    setAnalysisHistory([])
+    setHistoryError('')
   }
 
   const handleVerify = async () => {
@@ -78,6 +124,15 @@ function App() {
     try {
       const data = await verifyClaim(premise, hypothesis)
       setResult(data)
+
+      try {
+        const historyData = await getAnalysisHistory()
+        setAnalysisHistory(Array.isArray(historyData) ? historyData : [])
+      } catch (historyErr) {
+        setHistoryError(
+          historyErr.message || 'Failed to refresh analysis history.'
+        )
+      }
     } catch (err) {
       setError(err.message || 'Unable to connect to the backend.')
     } finally {
@@ -90,6 +145,20 @@ function App() {
     setHypothesis('')
     setResult(null)
     setError('')
+  }
+
+  const handleRefreshHistory = async () => {
+    setHistoryLoading(true)
+    setHistoryError('')
+
+    try {
+      const data = await getAnalysisHistory()
+      setAnalysisHistory(Array.isArray(data) ? data : [])
+    } catch (err) {
+      setHistoryError(err.message || 'Failed to load analysis history.')
+    } finally {
+      setHistoryLoading(false)
+    }
   }
 
   return (
@@ -160,123 +229,197 @@ function App() {
         )}
 
         {isLoggedIn && (
-          <div className="verification-form">
-            <div className="form-group">
-              <label htmlFor="premise">Premise</label>
+          <>
+            <div className="verification-form">
+              <div className="form-group">
+                <label htmlFor="premise">Premise</label>
 
-              <textarea
-                id="premise"
-                value={premise}
-                onChange={(event) => setPremise(event.target.value)}
-                placeholder="Enter the scientific premise..."
-                rows="4"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="hypothesis">Hypothesis</label>
-
-              <textarea
-                id="hypothesis"
-                value={hypothesis}
-                onChange={(event) => setHypothesis(event.target.value)}
-                placeholder="Enter the hypothesis to verify..."
-                rows="4"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleVerify}
-              disabled={loading}
-            >
-              {loading ? 'Verifying...' : 'Verify Claim'}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleClear}
-              disabled={loading}
-            >
-              Clear Form
-            </button>
-
-            {error && (
-              <p className="error-message">
-                {error}
-              </p>
-            )}
-
-            {result && (
-              <div className="result-card">
-                <div className="result-header">
-                  <p className="result-title">Prediction</p>
-
-                  <h2>{result.prediction}</h2>
-
-                  <p className="confidence-value">
-                    Confidence: {(result.confidence * 100).toFixed(2)}%
-                  </p>
-                </div>
-
-                <div className="score-list">
-                  <div className="score-item">
-                    <div className="score-row">
-                      <span>Entailment</span>
-                      <strong>
-                        {(result.scores.ENTAILMENT * 100).toFixed(2)}%
-                      </strong>
-                    </div>
-
-                    <div className="score-bar">
-                      <div
-                        className="score-fill entailment"
-                        style={{
-                          width: `${result.scores.ENTAILMENT * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="score-item">
-                    <div className="score-row">
-                      <span>Neutral</span>
-                      <strong>
-                        {(result.scores.NEUTRAL * 100).toFixed(2)}%
-                      </strong>
-                    </div>
-
-                    <div className="score-bar">
-                      <div
-                        className="score-fill neutral"
-                        style={{
-                          width: `${result.scores.NEUTRAL * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="score-item">
-                    <div className="score-row">
-                      <span>Contradiction</span>
-                      <strong>
-                        {(result.scores.CONTRADICTION * 100).toFixed(2)}%
-                      </strong>
-                    </div>
-
-                    <div className="score-bar">
-                      <div
-                        className="score-fill contradiction"
-                        style={{
-                          width: `${result.scores.CONTRADICTION * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
+                <textarea
+                  id="premise"
+                  value={premise}
+                  onChange={(event) => setPremise(event.target.value)}
+                  placeholder="Enter the scientific premise..."
+                  rows="4"
+                />
               </div>
-            )}
-          </div>
+
+              <div className="form-group">
+                <label htmlFor="hypothesis">Hypothesis</label>
+
+                <textarea
+                  id="hypothesis"
+                  value={hypothesis}
+                  onChange={(event) => setHypothesis(event.target.value)}
+                  placeholder="Enter the hypothesis to verify..."
+                  rows="4"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleVerify}
+                disabled={loading}
+              >
+                {loading ? 'Verifying...' : 'Verify Claim'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClear}
+                disabled={loading}
+              >
+                Clear Form
+              </button>
+
+              {error && (
+                <p className="error-message">
+                  {error}
+                </p>
+              )}
+
+              {result && (
+                <div className="result-card">
+                  <div className="result-header">
+                    <p className="result-title">Prediction</p>
+
+                    <h2>{result.prediction}</h2>
+
+                    <p className="confidence-value">
+                      Confidence: {(result.confidence * 100).toFixed(2)}%
+                    </p>
+                  </div>
+
+                  <div className="score-list">
+                    <div className="score-item">
+                      <div className="score-row">
+                        <span>Entailment</span>
+                        <strong>
+                          {(result.scores.ENTAILMENT * 100).toFixed(2)}%
+                        </strong>
+                      </div>
+
+                      <div className="score-bar">
+                        <div
+                          className="score-fill entailment"
+                          style={{
+                            width: `${result.scores.ENTAILMENT * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="score-item">
+                      <div className="score-row">
+                        <span>Neutral</span>
+                        <strong>
+                          {(result.scores.NEUTRAL * 100).toFixed(2)}%
+                        </strong>
+                      </div>
+
+                      <div className="score-bar">
+                        <div
+                          className="score-fill neutral"
+                          style={{
+                            width: `${result.scores.NEUTRAL * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="score-item">
+                      <div className="score-row">
+                        <span>Contradiction</span>
+                        <strong>
+                          {(result.scores.CONTRADICTION * 100).toFixed(2)}%
+                        </strong>
+                      </div>
+
+                      <div className="score-bar">
+                        <div
+                          className="score-fill contradiction"
+                          style={{
+                            width: `${result.scores.CONTRADICTION * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="history-section">
+              <div className="history-header">
+                <h2>Analysis History</h2>
+
+                <button
+                  type="button"
+                  onClick={handleRefreshHistory}
+                  disabled={historyLoading}
+                >
+                  {historyLoading ? 'Loading...' : 'Refresh History'}
+                </button>
+              </div>
+
+              {historyError && (
+                <p className="error-message">
+                  {historyError}
+                </p>
+              )}
+
+              {!historyLoading &&
+                !historyError &&
+                analysisHistory.length === 0 && (
+                  <p className="history-empty">
+                    No previous analyses found.
+                  </p>
+                )}
+
+              <div className="history-list">
+                {analysisHistory.map((analysis) => (
+                  <div
+                    className="history-card"
+                    key={analysis.id}
+                  >
+                    <div className="history-card-header">
+                      <strong>{analysis.prediction}</strong>
+
+                      <span>
+                        {(analysis.confidence * 100).toFixed(2)}%
+                      </span>
+                    </div>
+
+                    <p>
+                      <strong>Premise:</strong> {analysis.premise}
+                    </p>
+
+                    <p>
+                      <strong>Hypothesis:</strong> {analysis.hypothesis}
+                    </p>
+
+                    <p>
+                      Entailment:{' '}
+                      {(analysis.entailment_score * 100).toFixed(2)}%
+                    </p>
+
+                    <p>
+                      Neutral:{' '}
+                      {(analysis.neutral_score * 100).toFixed(2)}%
+                    </p>
+
+                    <p>
+                      Contradiction:{' '}
+                      {(analysis.contradiction_score * 100).toFixed(2)}%
+                    </p>
+
+                    <p className="history-date">
+                      {new Date(analysis.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </section>
     </main>
