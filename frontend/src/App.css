@@ -352,6 +352,35 @@ textarea {
   color: #e2e8f0;
 }
 
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 24px;
+}
+
+.history-filters button {
+  min-width: auto;
+  margin: 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(30, 41, 59, 0.75);
+  color: #cbd5e1;
+  box-shadow: none;
+}
+
+.history-filters button:hover {
+  background: rgba(51, 65, 85, 0.9);
+  transform: none;
+  box-shadow: none;
+}
+
+.history-filters button.active {
+  border-color: #3b82f6;
+  background: #2563eb;
+  color: #ffffff;
+}
+
 @media (max-width: 640px) {
   .app {
     padding: 20px;
@@ -396,4 +425,13 @@ textarea {
     flex-direction: column;
     align-items: flex-start;
   }
+
+.history-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.history-filters button {
+  width: 100%;
+}
 }

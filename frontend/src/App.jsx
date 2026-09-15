@@ -29,6 +29,7 @@ function App() {
   const [analysisHistory, setAnalysisHistory] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState('')
+  const [historyFilter, setHistoryFilter] = useState('')
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -42,7 +43,7 @@ function App() {
       setHistoryError('')
 
       try {
-        const data = await getAnalysisHistory()
+        const data = await getAnalysisHistory(historyFilter)
 
         if (!cancelled) {
           setAnalysisHistory(Array.isArray(data) ? data : [])
@@ -63,7 +64,7 @@ function App() {
     return () => {
       cancelled = true
     }
-  }, [isLoggedIn])
+  }, [isLoggedIn, historyFilter])
 
   const handleLogin = async () => {
     setLoginMessage('')
@@ -108,6 +109,7 @@ function App() {
 
     setAnalysisHistory([])
     setHistoryError('')
+    setHistoryFilter('')
   }
 
   const handleVerify = async () => {
@@ -126,7 +128,7 @@ function App() {
       setResult(data)
 
       try {
-        const historyData = await getAnalysisHistory()
+        const historyData = await getAnalysisHistory(historyFilter)
         setAnalysisHistory(Array.isArray(historyData) ? historyData : [])
       } catch (historyErr) {
         setHistoryError(
@@ -152,7 +154,7 @@ function App() {
     setHistoryError('')
 
     try {
-      const data = await getAnalysisHistory()
+      const data = await getAnalysisHistory(historyFilter)
       setAnalysisHistory(Array.isArray(data) ? data : [])
     } catch (err) {
       setHistoryError(err.message || 'Failed to load analysis history.')
@@ -361,6 +363,50 @@ function App() {
                 </button>
               </div>
 
+              <div className="history-filters">
+                <button
+                  type="button"
+                  className={historyFilter === '' ? 'active' : ''}
+                  onClick={() => setHistoryFilter('')}
+                  disabled={historyLoading}
+                >
+                  All
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    historyFilter === 'ENTAILMENT' ? 'active' : ''
+                  }
+                  onClick={() => setHistoryFilter('ENTAILMENT')}
+                  disabled={historyLoading}
+                >
+                  Entailment
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    historyFilter === 'NEUTRAL' ? 'active' : ''
+                  }
+                  onClick={() => setHistoryFilter('NEUTRAL')}
+                  disabled={historyLoading}
+                >
+                  Neutral
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    historyFilter === 'CONTRADICTION' ? 'active' : ''
+                  }
+                  onClick={() => setHistoryFilter('CONTRADICTION')}
+                  disabled={historyLoading}
+                >
+                  Contradiction
+                </button>
+              </div>
+
               {historyError && (
                 <p className="error-message">
                   {historyError}
@@ -371,7 +417,7 @@ function App() {
                 !historyError &&
                 analysisHistory.length === 0 && (
                   <p className="history-empty">
-                    No previous analyses found.
+                    No analyses found for this filter.
                   </p>
                 )}
 
