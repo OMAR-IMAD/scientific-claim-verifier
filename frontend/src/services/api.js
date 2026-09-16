@@ -110,3 +110,36 @@ export async function getAnalysisDetail(analysisId) {
 
   return data
 }
+
+export async function deleteAnalysis(analysisId) {
+  const token = localStorage.getItem('access_token')
+
+  if (!token) {
+    throw new Error('No access token found. Please log in first.')
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/history/${analysisId}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  )
+
+  if (!response.ok) {
+    let message = 'Failed to delete analysis.'
+
+    try {
+      const data = await response.json()
+      message = data.detail || message
+    } catch {
+      // No JSON error body
+    }
+
+    throw new Error(message)
+  }
+
+  return true
+}

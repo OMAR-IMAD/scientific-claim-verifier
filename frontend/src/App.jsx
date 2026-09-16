@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import {
+  deleteAnalysis,
   getAnalysisDetail,
   getAnalysisHistory,
   loginUser,
@@ -93,6 +94,36 @@ function App() {
   const handleCloseDetails = () => {
     setSelectedAnalysis(null)
     setDetailError('')
+  }
+
+  const handleDeleteAnalysis = async (analysisId) => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this analysis?'
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setHistoryError('')
+
+    try {
+      await deleteAnalysis(analysisId)
+
+      setAnalysisHistory((currentHistory) =>
+        currentHistory.filter(
+          (analysis) => analysis.id !== analysisId
+        )
+      )
+
+      if (selectedAnalysis?.id === analysisId) {
+        setSelectedAnalysis(null)
+      }
+    } catch (err) {
+      setHistoryError(
+        err.message || 'Failed to delete analysis.'
+      )
+    }
   }
 
   const handleLogin = async () => {
@@ -665,6 +696,15 @@ function App() {
                       disabled={detailLoading}
                     >
                       View Details
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDeleteAnalysis(analysis.id)
+                      }
+                    >
+                      Delete
                     </button>
                   </div>
                 ))}
