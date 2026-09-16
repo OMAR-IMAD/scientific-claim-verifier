@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import {
+  getAnalysisDetail,
   getAnalysisHistory,
   loginUser,
   verifyClaim,
@@ -31,6 +32,10 @@ function App() {
   const [historyError, setHistoryError] = useState('')
   const [historyFilter, setHistoryFilter] = useState('')
 
+  const [selectedAnalysis, setSelectedAnalysis] = useState(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState('')
+
   useEffect(() => {
     if (!isLoggedIn) {
       return
@@ -50,7 +55,9 @@ function App() {
         }
       } catch (err) {
         if (!cancelled) {
-          setHistoryError(err.message || 'Failed to load analysis history.')
+          setHistoryError(
+            err.message || 'Failed to load analysis history.'
+          )
         }
       } finally {
         if (!cancelled) {
@@ -65,6 +72,28 @@ function App() {
       cancelled = true
     }
   }, [isLoggedIn, historyFilter])
+
+  const handleViewDetails = async (analysisId) => {
+    setDetailLoading(true)
+    setDetailError('')
+    setSelectedAnalysis(null)
+
+    try {
+      const data = await getAnalysisDetail(analysisId)
+      setSelectedAnalysis(data)
+    } catch (err) {
+      setDetailError(
+        err.message || 'Failed to load analysis details.'
+      )
+    } finally {
+      setDetailLoading(false)
+    }
+  }
+
+  const handleCloseDetails = () => {
+    setSelectedAnalysis(null)
+    setDetailError('')
+  }
 
   const handleLogin = async () => {
     setLoginMessage('')
@@ -104,12 +133,17 @@ function App() {
     setLoginMessage('Logged out successfully.')
     setEmail('')
     setPassword('')
+
     setResult(null)
     setError('')
 
     setAnalysisHistory([])
     setHistoryError('')
     setHistoryFilter('')
+
+    setSelectedAnalysis(null)
+    setDetailError('')
+    setDetailLoading(false)
   }
 
   const handleVerify = async () => {
@@ -129,14 +163,20 @@ function App() {
 
       try {
         const historyData = await getAnalysisHistory(historyFilter)
-        setAnalysisHistory(Array.isArray(historyData) ? historyData : [])
+
+        setAnalysisHistory(
+          Array.isArray(historyData) ? historyData : []
+        )
       } catch (historyErr) {
         setHistoryError(
-          historyErr.message || 'Failed to refresh analysis history.'
+          historyErr.message ||
+            'Failed to refresh analysis history.'
         )
       }
     } catch (err) {
-      setError(err.message || 'Unable to connect to the backend.')
+      setError(
+        err.message || 'Unable to connect to the backend.'
+      )
     } finally {
       setLoading(false)
     }
@@ -155,9 +195,14 @@ function App() {
 
     try {
       const data = await getAnalysisHistory(historyFilter)
-      setAnalysisHistory(Array.isArray(data) ? data : [])
+
+      setAnalysisHistory(
+        Array.isArray(data) ? data : []
+      )
     } catch (err) {
-      setHistoryError(err.message || 'Failed to load analysis history.')
+      setHistoryError(
+        err.message || 'Failed to load analysis history.'
+      )
     } finally {
       setHistoryLoading(false)
     }
@@ -166,13 +211,15 @@ function App() {
   return (
     <main className="app">
       <section className="hero">
-        <p className="eyebrow">NLI-Based Fact-Checking Platform</p>
+        <p className="eyebrow">
+          NLI-Based Fact-Checking Platform
+        </p>
 
         <h1>Scientific Claim Verifier</h1>
 
         <p className="subtitle">
-          Analyze a scientific premise and hypothesis to classify their
-          relationship as Entailment, Contradiction, or Neutral.
+          Analyze a scientific premise and hypothesis to classify
+          their relationship as Entailment, Contradiction, or Neutral.
         </p>
 
         {!isLoggedIn ? (
@@ -234,24 +281,32 @@ function App() {
           <>
             <div className="verification-form">
               <div className="form-group">
-                <label htmlFor="premise">Premise</label>
+                <label htmlFor="premise">
+                  Premise
+                </label>
 
                 <textarea
                   id="premise"
                   value={premise}
-                  onChange={(event) => setPremise(event.target.value)}
+                  onChange={(event) =>
+                    setPremise(event.target.value)
+                  }
                   placeholder="Enter the scientific premise..."
                   rows="4"
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="hypothesis">Hypothesis</label>
+                <label htmlFor="hypothesis">
+                  Hypothesis
+                </label>
 
                 <textarea
                   id="hypothesis"
                   value={hypothesis}
-                  onChange={(event) => setHypothesis(event.target.value)}
+                  onChange={(event) =>
+                    setHypothesis(event.target.value)
+                  }
                   placeholder="Enter the hypothesis to verify..."
                   rows="4"
                 />
@@ -282,12 +337,15 @@ function App() {
               {result && (
                 <div className="result-card">
                   <div className="result-header">
-                    <p className="result-title">Prediction</p>
+                    <p className="result-title">
+                      Prediction
+                    </p>
 
                     <h2>{result.prediction}</h2>
 
                     <p className="confidence-value">
-                      Confidence: {(result.confidence * 100).toFixed(2)}%
+                      Confidence:{' '}
+                      {(result.confidence * 100).toFixed(2)}%
                     </p>
                   </div>
 
@@ -295,8 +353,12 @@ function App() {
                     <div className="score-item">
                       <div className="score-row">
                         <span>Entailment</span>
+
                         <strong>
-                          {(result.scores.ENTAILMENT * 100).toFixed(2)}%
+                          {(
+                            result.scores.ENTAILMENT * 100
+                          ).toFixed(2)}
+                          %
                         </strong>
                       </div>
 
@@ -304,7 +366,9 @@ function App() {
                         <div
                           className="score-fill entailment"
                           style={{
-                            width: `${result.scores.ENTAILMENT * 100}%`,
+                            width: `${
+                              result.scores.ENTAILMENT * 100
+                            }%`,
                           }}
                         />
                       </div>
@@ -313,8 +377,12 @@ function App() {
                     <div className="score-item">
                       <div className="score-row">
                         <span>Neutral</span>
+
                         <strong>
-                          {(result.scores.NEUTRAL * 100).toFixed(2)}%
+                          {(
+                            result.scores.NEUTRAL * 100
+                          ).toFixed(2)}
+                          %
                         </strong>
                       </div>
 
@@ -322,7 +390,9 @@ function App() {
                         <div
                           className="score-fill neutral"
                           style={{
-                            width: `${result.scores.NEUTRAL * 100}%`,
+                            width: `${
+                              result.scores.NEUTRAL * 100
+                            }%`,
                           }}
                         />
                       </div>
@@ -331,8 +401,12 @@ function App() {
                     <div className="score-item">
                       <div className="score-row">
                         <span>Contradiction</span>
+
                         <strong>
-                          {(result.scores.CONTRADICTION * 100).toFixed(2)}%
+                          {(
+                            result.scores.CONTRADICTION * 100
+                          ).toFixed(2)}
+                          %
                         </strong>
                       </div>
 
@@ -340,7 +414,9 @@ function App() {
                         <div
                           className="score-fill contradiction"
                           style={{
-                            width: `${result.scores.CONTRADICTION * 100}%`,
+                            width: `${
+                              result.scores.CONTRADICTION * 100
+                            }%`,
                           }}
                         />
                       </div>
@@ -359,14 +435,18 @@ function App() {
                   onClick={handleRefreshHistory}
                   disabled={historyLoading}
                 >
-                  {historyLoading ? 'Loading...' : 'Refresh History'}
+                  {historyLoading
+                    ? 'Loading...'
+                    : 'Refresh History'}
                 </button>
               </div>
 
               <div className="history-filters">
                 <button
                   type="button"
-                  className={historyFilter === '' ? 'active' : ''}
+                  className={
+                    historyFilter === '' ? 'active' : ''
+                  }
                   onClick={() => setHistoryFilter('')}
                   disabled={historyLoading}
                 >
@@ -376,9 +456,13 @@ function App() {
                 <button
                   type="button"
                   className={
-                    historyFilter === 'ENTAILMENT' ? 'active' : ''
+                    historyFilter === 'ENTAILMENT'
+                      ? 'active'
+                      : ''
                   }
-                  onClick={() => setHistoryFilter('ENTAILMENT')}
+                  onClick={() =>
+                    setHistoryFilter('ENTAILMENT')
+                  }
                   disabled={historyLoading}
                 >
                   Entailment
@@ -387,9 +471,13 @@ function App() {
                 <button
                   type="button"
                   className={
-                    historyFilter === 'NEUTRAL' ? 'active' : ''
+                    historyFilter === 'NEUTRAL'
+                      ? 'active'
+                      : ''
                   }
-                  onClick={() => setHistoryFilter('NEUTRAL')}
+                  onClick={() =>
+                    setHistoryFilter('NEUTRAL')
+                  }
                   disabled={historyLoading}
                 >
                   Neutral
@@ -398,9 +486,13 @@ function App() {
                 <button
                   type="button"
                   className={
-                    historyFilter === 'CONTRADICTION' ? 'active' : ''
+                    historyFilter === 'CONTRADICTION'
+                      ? 'active'
+                      : ''
                   }
-                  onClick={() => setHistoryFilter('CONTRADICTION')}
+                  onClick={() =>
+                    setHistoryFilter('CONTRADICTION')
+                  }
                   disabled={historyLoading}
                 >
                   Contradiction
@@ -411,6 +503,91 @@ function App() {
                 <p className="error-message">
                   {historyError}
                 </p>
+              )}
+
+              {detailLoading && (
+                <p className="login-message">
+                  Loading analysis details...
+                </p>
+              )}
+
+              {detailError && (
+                <p className="error-message">
+                  {detailError}
+                </p>
+              )}
+
+              {selectedAnalysis && (
+                <div className="result-card">
+                  <div className="result-header">
+                    <p className="result-title">
+                      Analysis Details
+                    </p>
+
+                    <h2>
+                      {selectedAnalysis.prediction}
+                    </h2>
+
+                    <p className="confidence-value">
+                      Confidence:{' '}
+                      {(
+                        selectedAnalysis.confidence * 100
+                      ).toFixed(2)}
+                      %
+                    </p>
+                  </div>
+
+                  <div className="score-list">
+                    <p>
+                      <strong>Premise:</strong>{' '}
+                      {selectedAnalysis.premise}
+                    </p>
+
+                    <p>
+                      <strong>Hypothesis:</strong>{' '}
+                      {selectedAnalysis.hypothesis}
+                    </p>
+
+                    <p>
+                      <strong>Entailment:</strong>{' '}
+                      {(
+                        selectedAnalysis.entailment_score *
+                        100
+                      ).toFixed(2)}
+                      %
+                    </p>
+
+                    <p>
+                      <strong>Neutral:</strong>{' '}
+                      {(
+                        selectedAnalysis.neutral_score * 100
+                      ).toFixed(2)}
+                      %
+                    </p>
+
+                    <p>
+                      <strong>Contradiction:</strong>{' '}
+                      {(
+                        selectedAnalysis.contradiction_score *
+                        100
+                      ).toFixed(2)}
+                      %
+                    </p>
+
+                    <p className="history-date">
+                      {new Date(
+                        selectedAnalysis.created_at
+                      ).toLocaleString()}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={handleCloseDetails}
+                    >
+                      Close Details
+                    </button>
+                  </div>
+                </div>
               )}
 
               {!historyLoading &&
@@ -428,39 +605,67 @@ function App() {
                     key={analysis.id}
                   >
                     <div className="history-card-header">
-                      <strong>{analysis.prediction}</strong>
+                      <strong>
+                        {analysis.prediction}
+                      </strong>
 
                       <span>
-                        {(analysis.confidence * 100).toFixed(2)}%
+                        {(
+                          analysis.confidence * 100
+                        ).toFixed(2)}
+                        %
                       </span>
                     </div>
 
                     <p>
-                      <strong>Premise:</strong> {analysis.premise}
+                      <strong>Premise:</strong>{' '}
+                      {analysis.premise}
                     </p>
 
                     <p>
-                      <strong>Hypothesis:</strong> {analysis.hypothesis}
+                      <strong>Hypothesis:</strong>{' '}
+                      {analysis.hypothesis}
                     </p>
 
                     <p>
                       Entailment:{' '}
-                      {(analysis.entailment_score * 100).toFixed(2)}%
+                      {(
+                        analysis.entailment_score * 100
+                      ).toFixed(2)}
+                      %
                     </p>
 
                     <p>
                       Neutral:{' '}
-                      {(analysis.neutral_score * 100).toFixed(2)}%
+                      {(
+                        analysis.neutral_score * 100
+                      ).toFixed(2)}
+                      %
                     </p>
 
                     <p>
                       Contradiction:{' '}
-                      {(analysis.contradiction_score * 100).toFixed(2)}%
+                      {(
+                        analysis.contradiction_score * 100
+                      ).toFixed(2)}
+                      %
                     </p>
 
                     <p className="history-date">
-                      {new Date(analysis.created_at).toLocaleString()}
+                      {new Date(
+                        analysis.created_at
+                      ).toLocaleString()}
                     </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleViewDetails(analysis.id)
+                      }
+                      disabled={detailLoading}
+                    >
+                      View Details
+                    </button>
                   </div>
                 ))}
               </div>
