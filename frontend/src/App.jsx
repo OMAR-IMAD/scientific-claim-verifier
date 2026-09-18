@@ -41,6 +41,7 @@ function App() {
     const [dashboardStats, setDashboardStats] = useState(null)
     const [dashboardLoading, setDashboardLoading] = useState(false)
     const [dashboardError, setDashboardError] = useState('')
+        const [dashboardLastUpdated, setDashboardLastUpdated] = useState(null)
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -95,6 +96,7 @@ useEffect(() => {
 
       if (!cancelled) {
         setDashboardStats(data)
+        setDashboardLastUpdated(new Date())
       }
     } catch (err) {
       if (!cancelled) {
@@ -252,17 +254,7 @@ useEffect(() => {
 
         const statsData = await getDashboardStats()
         setDashboardStats(statsData)
-      } catch (dashboardErr) {
-        setDashboardError(
-          dashboardErr.message ||
-            'Failed to refresh dashboard statistics.'
-        )
-      }
-      try {
-        setDashboardError('')
-
-        const statsData = await getDashboardStats()
-        setDashboardStats(statsData)
+        setDashboardLastUpdated(new Date())
       } catch (dashboardErr) {
         setDashboardError(
           dashboardErr.message ||
@@ -304,6 +296,43 @@ useEffect(() => {
       setHistoryLoading(false)
     }
   }
+
+  const handleRefreshDashboard = async () => {
+    setDashboardLoading(true)
+    setDashboardError('')
+
+    try {
+      const data = await getDashboardStats()
+      setDashboardStats(data)
+      setDashboardLastUpdated(new Date())
+    } catch (err) {
+      setDashboardError(
+        err.message || 'Failed to refresh dashboard statistics.'
+      )
+    } finally {
+      setDashboardLoading(false)
+    }
+  }
+
+  const mostCommonPrediction =
+    dashboardStats && dashboardStats.total > 0
+      ? [
+          {
+            label: 'Entailment',
+            value: dashboardStats.ENTAILMENT,
+          },
+          {
+            label: 'Neutral',
+            value: dashboardStats.NEUTRAL,
+          },
+          {
+            label: 'Contradiction',
+            value: dashboardStats.CONTRADICTION,
+          },
+        ].reduce((mostCommon, item) =>
+          item.value > mostCommon.value ? item : mostCommon
+        ).label
+      : 'No Data'
 
   return (
     <main className="app">
@@ -377,7 +406,25 @@ useEffect(() => {
         {isLoggedIn && (
           <>
 <div className="dashboard-section">
-  <h2>Dashboard</h2>
+  <div className="dashboard-header">
+  <div>
+    <h2>Dashboard</h2>
+
+    {dashboardLastUpdated && (
+      <p className="dashboard-updated">
+        Last Updated: {dashboardLastUpdated.toLocaleTimeString()}
+      </p>
+    )}
+  </div>
+
+  <button
+    type="button"
+    onClick={handleRefreshDashboard}
+    disabled={dashboardLoading}
+  >
+    {dashboardLoading ? 'Refreshing...' : 'Refresh Dashboard'}
+  </button>
+</div>
 
   {dashboardLoading && (
     <p className="login-message">
@@ -392,36 +439,43 @@ useEffect(() => {
   )}
 
   {dashboardStats && (
-    <div className="dashboard-cards">
-      <div className="dashboard-card">
-        <span>Total Analyses</span>
-        <strong>{dashboardStats.total}</strong>
+    <>
+      <div className="dashboard-cards">
+        <div className="dashboard-card">
+          <span>Total Analyses</span>
+          <strong>{dashboardStats.total}</strong>
+        </div>
+
+        <div className="dashboard-card">
+          <span>Entailment</span>
+          <strong>{dashboardStats.ENTAILMENT}</strong>
+          <small>
+            {dashboardStats.entailment_percentage.toFixed(2)}%
+          </small>
+        </div>
+
+        <div className="dashboard-card">
+          <span>Neutral</span>
+          <strong>{dashboardStats.NEUTRAL}</strong>
+          <small>
+            {dashboardStats.neutral_percentage.toFixed(2)}%
+          </small>
+        </div>
+
+        <div className="dashboard-card">
+          <span>Contradiction</span>
+          <strong>{dashboardStats.CONTRADICTION}</strong>
+          <small>
+            {dashboardStats.contradiction_percentage.toFixed(2)}%
+          </small>
+        </div>
       </div>
 
-      <div className="dashboard-card">
-        <span>Entailment</span>
-        <strong>{dashboardStats.ENTAILMENT}</strong>
-        <small>
-          {dashboardStats.entailment_percentage.toFixed(2)}%
-        </small>
+      <div className="dashboard-summary">
+        <span>Most Common Prediction</span>
+        <strong>{mostCommonPrediction}</strong>
       </div>
-
-      <div className="dashboard-card">
-        <span>Neutral</span>
-        <strong>{dashboardStats.NEUTRAL}</strong>
-        <small>
-          {dashboardStats.neutral_percentage.toFixed(2)}%
-        </small>
-      </div>
-
-      <div className="dashboard-card">
-        <span>Contradiction</span>
-        <strong>{dashboardStats.CONTRADICTION}</strong>
-        <small>
-          {dashboardStats.contradiction_percentage.toFixed(2)}%
-        </small>
-      </div>
-    </div>
+    </>
   )}
 </div>
             <div className="verification-form">
