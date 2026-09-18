@@ -4,6 +4,7 @@ import {
   deleteAnalysis,
   getAnalysisDetail,
   getAnalysisHistory,
+  getDashboardStats,
   loginUser,
   verifyClaim,
 } from './services/api'
@@ -34,8 +35,12 @@ function App() {
   const [historyFilter, setHistoryFilter] = useState('')
 
   const [selectedAnalysis, setSelectedAnalysis] = useState(null)
-  const [detailLoading, setDetailLoading] = useState(false)
-  const [detailError, setDetailError] = useState('')
+    const [detailLoading, setDetailLoading] = useState(false)
+    const [detailError, setDetailError] = useState('')
+
+    const [dashboardStats, setDashboardStats] = useState(null)
+    const [dashboardLoading, setDashboardLoading] = useState(false)
+    const [dashboardError, setDashboardError] = useState('')
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -73,6 +78,43 @@ function App() {
       cancelled = true
     }
   }, [isLoggedIn, historyFilter])
+
+useEffect(() => {
+  if (!isLoggedIn) {
+    return
+  }
+
+  let cancelled = false
+
+  const loadDashboardStats = async () => {
+    setDashboardLoading(true)
+    setDashboardError('')
+
+    try {
+      const data = await getDashboardStats()
+
+      if (!cancelled) {
+        setDashboardStats(data)
+      }
+    } catch (err) {
+      if (!cancelled) {
+        setDashboardError(
+          err.message || 'Failed to load dashboard statistics.'
+        )
+      }
+    } finally {
+      if (!cancelled) {
+        setDashboardLoading(false)
+      }
+    }
+  }
+
+  loadDashboardStats()
+
+  return () => {
+    cancelled = true
+  }
+}, [isLoggedIn])
 
   const handleViewDetails = async (analysisId) => {
     setDetailLoading(true)
@@ -204,6 +246,30 @@ function App() {
             'Failed to refresh analysis history.'
         )
       }
+
+      try {
+        setDashboardError('')
+
+        const statsData = await getDashboardStats()
+        setDashboardStats(statsData)
+      } catch (dashboardErr) {
+        setDashboardError(
+          dashboardErr.message ||
+            'Failed to refresh dashboard statistics.'
+        )
+      }
+      try {
+        setDashboardError('')
+
+        const statsData = await getDashboardStats()
+        setDashboardStats(statsData)
+      } catch (dashboardErr) {
+        setDashboardError(
+          dashboardErr.message ||
+            'Failed to refresh dashboard statistics.'
+        )
+      }
+
     } catch (err) {
       setError(
         err.message || 'Unable to connect to the backend.'
@@ -310,6 +376,54 @@ function App() {
 
         {isLoggedIn && (
           <>
+<div className="dashboard-section">
+  <h2>Dashboard</h2>
+
+  {dashboardLoading && (
+    <p className="login-message">
+      Loading dashboard statistics...
+    </p>
+  )}
+
+  {dashboardError && (
+    <p className="error-message">
+      {dashboardError}
+    </p>
+  )}
+
+  {dashboardStats && (
+    <div className="dashboard-cards">
+      <div className="dashboard-card">
+        <span>Total Analyses</span>
+        <strong>{dashboardStats.total}</strong>
+      </div>
+
+      <div className="dashboard-card">
+        <span>Entailment</span>
+        <strong>{dashboardStats.ENTAILMENT}</strong>
+        <small>
+          {dashboardStats.entailment_percentage.toFixed(2)}%
+        </small>
+      </div>
+
+      <div className="dashboard-card">
+        <span>Neutral</span>
+        <strong>{dashboardStats.NEUTRAL}</strong>
+        <small>
+          {dashboardStats.neutral_percentage.toFixed(2)}%
+        </small>
+      </div>
+
+      <div className="dashboard-card">
+        <span>Contradiction</span>
+        <strong>{dashboardStats.CONTRADICTION}</strong>
+        <small>
+          {dashboardStats.contradiction_percentage.toFixed(2)}%
+        </small>
+      </div>
+    </div>
+  )}
+</div>
             <div className="verification-form">
               <div className="form-group">
                 <label htmlFor="premise">
