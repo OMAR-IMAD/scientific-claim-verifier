@@ -33,6 +33,7 @@ function App() {
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState('')
   const [historyFilter, setHistoryFilter] = useState('')
+    const [historySearch, setHistorySearch] = useState('')
 
   const [selectedAnalysis, setSelectedAnalysis] = useState(null)
     const [detailLoading, setDetailLoading] = useState(false)
@@ -215,6 +216,7 @@ useEffect(() => {
     setAnalysisHistory([])
     setHistoryError('')
     setHistoryFilter('')
+    setHistorySearch('')
 
     setSelectedAnalysis(null)
     setDetailError('')
@@ -313,6 +315,22 @@ useEffect(() => {
       setDashboardLoading(false)
     }
   }
+
+const normalizedHistorySearch = historySearch.trim().toLowerCase()
+
+const filteredAnalysisHistory = analysisHistory.filter((analysis) => {
+  if (!normalizedHistorySearch) {
+    return true
+  }
+
+  const premiseText = analysis.premise?.toLowerCase() || ''
+  const hypothesisText = analysis.hypothesis?.toLowerCase() || ''
+
+  return (
+    premiseText.includes(normalizedHistorySearch) ||
+    hypothesisText.includes(normalizedHistorySearch)
+  )
+})
 
   const mostCommonPrediction =
     dashboardStats && dashboardStats.total > 0
@@ -640,6 +658,18 @@ useEffect(() => {
                 </button>
               </div>
 
+              <div className="history-search">
+                <input
+                  type="text"
+                  value={historySearch}
+                  onChange={(event) =>
+                    setHistorySearch(event.target.value)
+                  }
+                  placeholder="Search premise or hypothesis..."
+                  aria-label="Search analysis history"
+                />
+              </div>
+
               <div className="history-filters">
                 <button
                   type="button"
@@ -797,8 +827,17 @@ useEffect(() => {
                   </p>
                 )}
 
+              {!historyLoading &&
+                !historyError &&
+                analysisHistory.length > 0 &&
+                filteredAnalysisHistory.length === 0 && (
+                  <p className="history-empty">
+                    No analyses match your search.
+                  </p>
+                )}
+
               <div className="history-list">
-                {analysisHistory.map((analysis) => (
+                {filteredAnalysisHistory.map((analysis) => (
                   <div
                     className="history-card"
                     key={analysis.id}

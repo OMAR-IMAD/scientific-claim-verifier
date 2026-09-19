@@ -277,6 +277,42 @@ textarea {
   box-shadow: none;
 }
 
+/* Day 61 - Analysis History Search */
+
+.history-search {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.history-search input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #f8fafc;
+  font-size: 15px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.history-search input::placeholder {
+  color: #64748b;
+}
+
+.history-search input:hover {
+  border-color: rgba(96, 165, 250, 0.45);
+}
+
+.history-search input:focus {
+  border-color: #3b82f6;
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
 .history-empty {
   margin: 24px 0 0;
   padding: 20px;
@@ -519,6 +555,11 @@ textarea {
   .history-header h2 {
     text-align: center;
     font-size: 24px;
+  }
+
+  .history-search input {
+    padding: 13px 14px;
+    font-size: 14px;
   }
 
   .history-card {
