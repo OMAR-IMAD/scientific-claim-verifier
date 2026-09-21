@@ -34,6 +34,7 @@ function App() {
   const [historyError, setHistoryError] = useState('')
   const [historyFilter, setHistoryFilter] = useState('')
     const [historySearch, setHistorySearch] = useState('')
+        const [historySort, setHistorySort] = useState('newest')
 
   const [selectedAnalysis, setSelectedAnalysis] = useState(null)
     const [detailLoading, setDetailLoading] = useState(false)
@@ -217,6 +218,7 @@ useEffect(() => {
     setHistoryError('')
     setHistoryFilter('')
     setHistorySearch('')
+    setHistorySort('newest')
 
     setSelectedAnalysis(null)
     setDetailError('')
@@ -330,6 +332,17 @@ const filteredAnalysisHistory = analysisHistory.filter((analysis) => {
     premiseText.includes(normalizedHistorySearch) ||
     hypothesisText.includes(normalizedHistorySearch)
   )
+})
+
+const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
+  const aDate = new Date(a.created_at || 0).getTime()
+  const bDate = new Date(b.created_at || 0).getTime()
+
+  if (historySort === 'oldest') {
+    return aDate - bDate
+  }
+
+  return bDate - aDate
 })
 
   const mostCommonPrediction =
@@ -670,6 +683,24 @@ const filteredAnalysisHistory = analysisHistory.filter((analysis) => {
                 />
               </div>
 
+              <div className="history-sort">
+                <button
+                  type="button"
+                  className={historySort === 'newest' ? 'active' : ''}
+                  onClick={() => setHistorySort('newest')}
+                >
+                  Newest First
+                </button>
+
+                <button
+                  type="button"
+                  className={historySort === 'oldest' ? 'active' : ''}
+                  onClick={() => setHistorySort('oldest')}
+                >
+                  Oldest First
+                </button>
+              </div>
+
               <div className="history-filters">
                 <button
                   type="button"
@@ -837,7 +868,7 @@ const filteredAnalysisHistory = analysisHistory.filter((analysis) => {
                 )}
 
               <div className="history-list">
-                {filteredAnalysisHistory.map((analysis) => (
+                {sortedAnalysisHistory.map((analysis) => (
                   <div
                     className="history-card"
                     key={analysis.id}

@@ -313,6 +313,37 @@ textarea {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
+/* Day 62 - Analysis History Sorting */
+
+.history-sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.history-sort button {
+  min-width: auto;
+  margin: 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(30, 41, 59, 0.75);
+  color: #cbd5e1;
+  box-shadow: none;
+}
+
+.history-sort button:hover {
+  background: rgba(51, 65, 85, 0.9);
+  transform: none;
+  box-shadow: none;
+}
+
+.history-sort button.active {
+  border-color: #3b82f6;
+  background: #2563eb;
+  color: #ffffff;
+}
+
 .history-empty {
   margin: 24px 0 0;
   padding: 20px;
@@ -560,6 +591,15 @@ textarea {
   .history-search input {
     padding: 13px 14px;
     font-size: 14px;
+  }
+
+  .history-sort {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .history-sort button {
+    width: 100%;
   }
 
   .history-card {
