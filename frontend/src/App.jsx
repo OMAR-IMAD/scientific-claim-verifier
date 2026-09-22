@@ -6,6 +6,7 @@ import {
   getAnalysisHistory,
   getDashboardStats,
   loginUser,
+  registerUser,
   verifyClaim,
 } from './services/api'
 
@@ -20,6 +21,9 @@ function App() {
   const [password, setPassword] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   const [loginMessage, setLoginMessage] = useState('')
+  const [authMode, setAuthMode] = useState('login')
+  const [registerLoading, setRegisterLoading] = useState(false)
+  const [registerMessage, setRegisterMessage] = useState('')
 
   const [isLoggedIn, setIsLoggedIn] = useState(
     Boolean(localStorage.getItem('access_token'))
@@ -200,6 +204,49 @@ useEffect(() => {
     }
   }
 
+  const handleRegister = async () => {
+    setRegisterMessage('')
+    setLoginMessage('')
+
+    if (!email.trim() || !password) {
+      setRegisterMessage('Please enter email and password.')
+      return
+    }
+
+    if (password.length < 8) {
+      setRegisterMessage('Password must be at least 8 characters.')
+      return
+    }
+
+    setRegisterLoading(true)
+
+    try {
+      await registerUser(email.trim(), password)
+
+      setRegisterMessage(
+        'Account created successfully. You can now log in.'
+      )
+      setPassword('')
+      setAuthMode('login')
+      setLoginMessage(
+        'Account created successfully. Please log in.'
+      )
+    } catch (err) {
+      setRegisterMessage(
+        err.message || 'Registration failed.'
+      )
+    } finally {
+      setRegisterLoading(false)
+    }
+  }
+
+  const handleAuthModeChange = (mode) => {
+    setAuthMode(mode)
+    setLoginMessage('')
+    setRegisterMessage('')
+    setPassword('')
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('user_email')
@@ -208,6 +255,8 @@ useEffect(() => {
     setLoggedInEmail('')
 
     setLoginMessage('Logged out successfully.')
+    setRegisterMessage('')
+    setAuthMode('login')
     setEmail('')
     setPassword('')
 
@@ -381,6 +430,26 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
 
         {!isLoggedIn ? (
           <div className="login-form">
+            <div className="auth-mode-switch">
+              <button
+                type="button"
+                className={authMode === 'login' ? 'active' : ''}
+                onClick={() => handleAuthModeChange('login')}
+                disabled={loginLoading || registerLoading}
+              >
+                Login
+              </button>
+
+              <button
+                type="button"
+                className={authMode === 'register' ? 'active' : ''}
+                onClick={() => handleAuthModeChange('register')}
+                disabled={loginLoading || registerLoading}
+              >
+                Create Account
+              </button>
+            </div>
+
             <div className="form-group">
               <label htmlFor="email">Email</label>
 
@@ -390,6 +459,7 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="Enter your email..."
+                autoComplete="email"
               />
             </div>
 
@@ -401,21 +471,48 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter your password..."
+                placeholder={
+                  authMode === 'register'
+                    ? 'Create a password (min. 8 characters)...'
+                    : 'Enter your password...'
+                }
+                autoComplete={
+                  authMode === 'register'
+                    ? 'new-password'
+                    : 'current-password'
+                }
               />
             </div>
 
-            <button
-              type="button"
-              onClick={handleLogin}
-              disabled={loginLoading}
-            >
-              {loginLoading ? 'Logging in...' : 'Login'}
-            </button>
+            {authMode === 'login' ? (
+              <button
+                type="button"
+                onClick={handleLogin}
+                disabled={loginLoading || registerLoading}
+              >
+                {loginLoading ? 'Logging in...' : 'Login'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleRegister}
+                disabled={registerLoading || loginLoading}
+              >
+                {registerLoading
+                  ? 'Creating Account...'
+                  : 'Create Account'}
+              </button>
+            )}
 
-            {loginMessage && (
+            {authMode === 'login' && loginMessage && (
               <p className="login-message">
                 {loginMessage}
+              </p>
+            )}
+
+            {authMode === 'register' && registerMessage && (
+              <p className="login-message">
+                {registerMessage}
               </p>
             )}
           </div>

@@ -23,6 +23,31 @@ export async function loginUser(email, password) {
   return data
 }
 
+export async function registerUser(email, password) {
+  const response = await fetch(`${API_BASE_URL}/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: email.trim(),
+      password,
+    }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === 'string'
+        ? data.detail
+        : 'Registration failed.'
+    )
+  }
+
+  return data
+}
+
 export async function verifyClaim(premise, hypothesis) {
   const token = localStorage.getItem('access_token')
 
@@ -65,6 +90,7 @@ export async function getAnalysisHistory(prediction = '') {
   }
 
   const queryString = params.toString()
+
   const url = queryString
     ? `${API_BASE_URL}/history?${queryString}`
     : `${API_BASE_URL}/history`
@@ -79,7 +105,9 @@ export async function getAnalysisHistory(prediction = '') {
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(data.detail || 'Failed to load analysis history.')
+    throw new Error(
+      data.detail || 'Failed to load analysis history.'
+    )
   }
 
   return data
@@ -105,7 +133,9 @@ export async function getAnalysisDetail(analysisId) {
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(data.detail || 'Failed to load analysis details.')
+    throw new Error(
+      data.detail || 'Failed to load analysis details.'
+    )
   }
 
   return data
