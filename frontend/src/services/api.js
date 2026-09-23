@@ -201,3 +201,44 @@ export async function getDashboardStats() {
 
   return data
 }
+
+export async function uploadFile(file) {
+  const token = localStorage.getItem('access_token')
+
+  if (!token) {
+    throw new Error('No access token found. Please log in first.')
+  }
+
+  if (!file) {
+    throw new Error('Please select a file first.')
+  }
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${API_BASE_URL}/upload`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  })
+
+  let data
+
+  try {
+    data = await response.json()
+  } catch {
+    throw new Error('Invalid response from the upload service.')
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.detail === 'string'
+        ? data.detail
+        : 'File upload failed.'
+    )
+  }
+
+  return data
+}

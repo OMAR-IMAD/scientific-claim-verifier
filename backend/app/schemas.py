@@ -269,3 +269,11 @@ class DashboardStatsResponse(BaseModel):
     entailment_percentage: float
     contradiction_percentage: float
     neutral_percentage: float
+
+class FileUploadResponse(BaseModel):
+    """Response returned after extracting text from an uploaded file."""
+
+    filename: str
+    file_type: str
+    text: str
+    character_count: int

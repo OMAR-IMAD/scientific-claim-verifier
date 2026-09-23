@@ -1,7 +1,11 @@
 """Main FastAPI application for the Scientific Claim Verifier."""
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from io import BytesIO
+from pathlib import Path
+
+from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
 from backend.app.database import get_db
@@ -26,6 +30,7 @@ from backend.app.schemas import (
     AnalysisResponse,
     DashboardStatsResponse,
     ErrorResponse,
+    FileUploadResponse,
     HealthResponse,
     PredictionRequest,
     PredictionResponse,
@@ -62,6 +67,8 @@ app.add_middleware(
 MODEL_SERVICE_UNAVAILABLE = "Model service is unavailable."
 MODEL_SERVICE_NOT_READY = "Model service is not ready."
 PREDICTION_FAILED = "Prediction failed."
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024
+ALLOWED_UPLOAD_EXTENSIONS = {".txt", ".pdf"}
 
 def get_ready_model_service():
     """Return the model service when it is available and ready."""
@@ -450,4 +457,75 @@ def predict_claim(
         premise=premise,
         hypothesis=hypothesis,
         **prediction_result,
+    )
+
+@app.post(
+    "/upload",
+    response_model=FileUploadResponse,
+    summary="Upload a text or PDF file",
+    description="Extract text from an authenticated user's TXT or PDF file.",
+)
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+) -> FileUploadResponse:
+    """Extract readable text from an uploaded TXT or PDF file."""
+
+    filename = file.filename or "uploaded_file"
+    extension = Path(filename).suffix.lower()
+
+    if extension not in ALLOWED_UPLOAD_EXTENSIONS:
+        raise HTTPException(
+            status_code=415,
+            detail="Only TXT and PDF files are supported.",
+        )
+
+    contents = await file.read(MAX_UPLOAD_SIZE + 1)
+
+    if not contents:
+        raise HTTPException(
+            status_code=400,
+            detail="Uploaded file is empty.",
+        )
+
+    if len(contents) > MAX_UPLOAD_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail="Uploaded file must be 5 MB or smaller.",
+        )
+
+    if extension == ".txt":
+        try:
+            extracted_text = contents.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            raise HTTPException(
+                status_code=400,
+                detail="TXT file must use UTF-8 encoding.",
+            )
+    else:
+        try:
+            reader = PdfReader(BytesIO(contents))
+            extracted_text = "\n".join(
+                page.extract_text() or ""
+                for page in reader.pages
+            )
+        except Exception:
+            raise HTTPException(
+                status_code=400,
+                detail="Unable to read the PDF file.",
+            )
+
+    extracted_text = extracted_text.strip()
+
+    if not extracted_text:
+        raise HTTPException(
+            status_code=422,
+            detail="No readable text was found in the uploaded file.",
+        )
+
+    return FileUploadResponse(
+        filename=filename,
+        file_type=extension.lstrip("."),
+        text=extracted_text,
+        character_count=len(extracted_text),
     )

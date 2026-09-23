@@ -7,6 +7,7 @@ import {
   getDashboardStats,
   loginUser,
   registerUser,
+  uploadFile,
   verifyClaim,
 } from './services/api'
 
@@ -16,6 +17,9 @@ function App() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [premiseUploadLoading, setPremiseUploadLoading] = useState(false)
+  const [hypothesisUploadLoading, setHypothesisUploadLoading] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState('')
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -262,6 +266,9 @@ useEffect(() => {
 
     setResult(null)
     setError('')
+    setUploadMessage('')
+    setPremiseUploadLoading(false)
+    setHypothesisUploadLoading(false)
 
     setAnalysisHistory([])
     setHistoryError('')
@@ -324,11 +331,60 @@ useEffect(() => {
     }
   }
 
+  const handleFileUpload = async (event, target) => {
+    const input = event.currentTarget
+    const file = input.files?.[0]
+
+    if (!file) {
+      return
+    }
+
+    setError('')
+    setUploadMessage('')
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File must be 5 MB or smaller.')
+      input.value = ''
+      return
+    }
+
+    const isPremise = target === 'premise'
+
+    if (isPremise) {
+      setPremiseUploadLoading(true)
+    } else {
+      setHypothesisUploadLoading(true)
+    }
+
+    try {
+      const data = await uploadFile(file)
+
+      if (isPremise) {
+        setPremise(data.text)
+      } else {
+        setHypothesis(data.text)
+      }
+
+      setUploadMessage(`${data.filename} loaded successfully.`)
+    } catch (err) {
+      setError(err.message || 'Failed to upload file.')
+    } finally {
+      if (isPremise) {
+        setPremiseUploadLoading(false)
+      } else {
+        setHypothesisUploadLoading(false)
+      }
+
+      input.value = ''
+    }
+  }
+
   const handleClear = () => {
     setPremise('')
     setHypothesis('')
     setResult(null)
     setError('')
+    setUploadMessage('')
   }
 
   const handleRefreshHistory = async () => {
@@ -621,6 +677,22 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
                   placeholder="Enter the scientific premise..."
                   rows="4"
                 />
+
+                <input
+                  className="file-input"
+                  type="file"
+                  accept=".txt,.pdf,text/plain,application/pdf"
+                  onChange={(event) =>
+                    handleFileUpload(event, 'premise')
+                  }
+                  disabled={premiseUploadLoading || loading}
+                />
+
+                <small className="file-upload-help">
+                  {premiseUploadLoading
+                    ? 'Uploading premise file...'
+                    : 'Upload premise from TXT or PDF (max 5 MB).'}
+                </small>
               </div>
 
               <div className="form-group">
@@ -637,6 +709,22 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
                   placeholder="Enter the hypothesis to verify..."
                   rows="4"
                 />
+
+                <input
+                  className="file-input"
+                  type="file"
+                  accept=".txt,.pdf,text/plain,application/pdf"
+                  onChange={(event) =>
+                    handleFileUpload(event, 'hypothesis')
+                  }
+                  disabled={hypothesisUploadLoading || loading}
+                />
+
+                <small className="file-upload-help">
+                  {hypothesisUploadLoading
+                    ? 'Uploading hypothesis file...'
+                    : 'Upload hypothesis from TXT or PDF (max 5 MB).'}
+                </small>
               </div>
 
               <button
@@ -654,6 +742,12 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
               >
                 Clear Form
               </button>
+
+              {uploadMessage && (
+                <p className="upload-message">
+                  {uploadMessage}
+                </p>
+              )}
 
               {error && (
                 <p className="error-message">
