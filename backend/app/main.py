@@ -503,6 +503,12 @@ async def upload_file(
                 detail="TXT file must use UTF-8 encoding.",
             )
     else:
+        if not contents.startswith(b"%PDF-"):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid PDF file.",
+            )
+
         try:
             reader = PdfReader(BytesIO(contents))
             extracted_text = "\n".join(
