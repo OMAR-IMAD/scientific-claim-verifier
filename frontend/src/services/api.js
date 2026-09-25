@@ -242,3 +242,28 @@ export async function uploadFile(file) {
 
   return data
 }
+
+export async function getCurrentUser() {
+  const token = localStorage.getItem('access_token')
+
+  if (!token) {
+    throw new Error('No access token found. Please log in first.')
+  }
+
+  const response = await fetch(`${API_BASE_URL}/me`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      data.detail || 'Failed to load user profile.'
+    )
+  }
+
+  return data
+}

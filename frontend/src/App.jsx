@@ -4,6 +4,7 @@ import {
   deleteAnalysis,
   getAnalysisDetail,
   getAnalysisHistory,
+  getCurrentUser,
   getDashboardStats,
   loginUser,
   registerUser,
@@ -37,6 +38,9 @@ function App() {
     localStorage.getItem('user_email') || ''
   )
 
+    const [userProfile, setUserProfile] = useState(null)
+    const [profileLoading, setProfileLoading] = useState(false)
+    const [profileError, setProfileError] = useState('')
   const [analysisHistory, setAnalysisHistory] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState('')
@@ -52,6 +56,48 @@ function App() {
     const [dashboardLoading, setDashboardLoading] = useState(false)
     const [dashboardError, setDashboardError] = useState('')
         const [dashboardLastUpdated, setDashboardLastUpdated] = useState(null)
+
+  useEffect(() => {
+  if (!isLoggedIn) {
+    return
+  }
+
+    let cancelled = false
+
+    const loadUserProfile = async () => {
+      setProfileLoading(true)
+      setProfileError('')
+
+      try {
+        const data = await getCurrentUser()
+
+        if (!cancelled) {
+          setUserProfile(data)
+
+          if (data?.email) {
+            setLoggedInEmail(data.email)
+            localStorage.setItem('user_email', data.email)
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setProfileError(
+            err.message || 'Failed to load user profile.'
+          )
+        }
+      } finally {
+        if (!cancelled) {
+          setProfileLoading(false)
+        }
+      }
+    }
+
+    loadUserProfile()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isLoggedIn])
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -127,6 +173,27 @@ useEffect(() => {
     cancelled = true
   }
 }, [isLoggedIn])
+
+  const handleRefreshProfile = async () => {
+    setProfileLoading(true)
+    setProfileError('')
+
+    try {
+      const data = await getCurrentUser()
+      setUserProfile(data)
+
+      if (data?.email) {
+        setLoggedInEmail(data.email)
+        localStorage.setItem('user_email', data.email)
+      }
+    } catch (err) {
+      setProfileError(
+        err.message || 'Failed to refresh user profile.'
+      )
+    } finally {
+      setProfileLoading(false)
+    }
+  }
 
   const handleViewDetails = async (analysisId) => {
     setDetailLoading(true)
@@ -257,6 +324,9 @@ useEffect(() => {
 
     setIsLoggedIn(false)
     setLoggedInEmail('')
+    setUserProfile(null)
+    setProfileLoading(false)
+    setProfileError('')
 
     setLoginMessage('Logged out successfully.')
     setRegisterMessage('')
@@ -589,6 +659,51 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
 
         {isLoggedIn && (
           <>
+            <div className="dashboard-section">
+              <div className="dashboard-header">
+                <div>
+                  <h2>User Profile</h2>
+                  <p className="dashboard-updated">
+                    Current authenticated account
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleRefreshProfile}
+                  disabled={profileLoading}
+                >
+                  {profileLoading ? 'Refreshing...' : 'Refresh Profile'}
+                </button>
+              </div>
+
+              {profileLoading && !userProfile && (
+                <p className="login-message">
+                  Loading user profile...
+                </p>
+              )}
+
+              {profileError && (
+                <p className="error-message">
+                  {profileError}
+                </p>
+              )}
+
+              {userProfile && (
+                <div className="dashboard-cards">
+                  <div className="dashboard-card">
+                    <span>User ID</span>
+                    <strong>{userProfile.id}</strong>
+                  </div>
+
+                  <div className="dashboard-card">
+                    <span>Email</span>
+                    <strong>{userProfile.email}</strong>
+                  </div>
+                </div>
+              )}
+            </div>
+
 <div className="dashboard-section">
   <div className="dashboard-header">
   <div>
