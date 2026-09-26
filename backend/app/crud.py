@@ -1,5 +1,7 @@
 """Database CRUD operations."""
 
+from datetime import date, timedelta
+
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -69,7 +71,7 @@ def get_analyses_by_user(
     user_id: int,
     prediction: str | None = None,
     search: str | None = None,
-       sort_order: str = "newest",
+    sort_order: str = "newest",
     skip: int = 0,
     limit: int = 20,
 ) -> list[Analysis]:
@@ -86,6 +88,7 @@ def get_analyses_by_user(
 
     if search is not None and search.strip():
         search_pattern = f"%{search.strip()}%"
+
         statement = statement.where(
             or_(
                 Analysis.premise.ilike(search_pattern),
@@ -123,6 +126,7 @@ def get_analysis_by_id_for_user(
 
     return db.scalar(statement)
 
+
 def delete_analysis_by_id_for_user(
     db: Session,
     user_id: int,
@@ -148,7 +152,7 @@ def delete_analysis_by_id_for_user(
 def get_analysis_stats_by_user(
     db: Session,
     user_id: int,
-) -> dict[str, int | float]:
+) -> dict[str, object]:
     """Return analysis statistics for a specific user."""
 
     statement = (
@@ -178,10 +182,12 @@ def get_analysis_stats_by_user(
             stats["ENTAILMENT"] / stats["total"] * 100,
             2,
         )
+
         stats["contradiction_percentage"] = round(
             stats["CONTRADICTION"] / stats["total"] * 100,
             2,
         )
+
         stats["neutral_percentage"] = round(
             stats["NEUTRAL"] / stats["total"] * 100,
             2,
@@ -190,5 +196,39 @@ def get_analysis_stats_by_user(
         stats["entailment_percentage"] = 0.0
         stats["contradiction_percentage"] = 0.0
         stats["neutral_percentage"] = 0.0
+
+    today = date.today()
+    start_date = today - timedelta(days=6)
+
+    daily_counts = {
+        (start_date + timedelta(days=offset)).isoformat(): 0
+        for offset in range(7)
+    }
+
+    daily_statement = (
+        select(
+            func.date(Analysis.created_at),
+            func.count(Analysis.id),
+        )
+        .where(
+            Analysis.user_id == user_id,
+            func.date(Analysis.created_at) >= start_date.isoformat(),
+            func.date(Analysis.created_at) <= today.isoformat(),
+        )
+        .group_by(func.date(Analysis.created_at))
+        .order_by(func.date(Analysis.created_at))
+    )
+
+    daily_rows = db.execute(daily_statement).all()
+
+    for analysis_date, count in daily_rows:
+        day_key = str(analysis_date)
+
+        if day_key in daily_counts:
+            daily_counts[day_key] = count
+
+    stats["today_total"] = daily_counts[today.isoformat()]
+    stats["last_7_days_total"] = sum(daily_counts.values())
+    stats["daily_counts"] = daily_counts
 
     return stats

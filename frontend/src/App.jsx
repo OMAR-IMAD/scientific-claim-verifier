@@ -540,6 +540,15 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
         ).label
       : 'No Data'
 
+  const weeklyActivity = dashboardStats?.daily_counts
+    ? Object.entries(dashboardStats.daily_counts)
+    : []
+
+  const maxWeeklyCount = Math.max(
+    1,
+    ...weeklyActivity.map(([, count]) => count),
+  )
+
   return (
     <main className="app">
       <section className="hero">
@@ -773,6 +782,59 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
       <div className="dashboard-summary">
         <span>Most Common Prediction</span>
         <strong>{mostCommonPrediction}</strong>
+      </div>
+
+      <div className="dashboard-period-cards">
+        <div className="dashboard-period-card">
+          <span>Today</span>
+          <strong>{dashboardStats.today_total ?? 0}</strong>
+          <small>Analyses today</small>
+        </div>
+
+        <div className="dashboard-period-card">
+          <span>Last 7 Days</span>
+          <strong>{dashboardStats.last_7_days_total ?? 0}</strong>
+          <small>Weekly analyses</small>
+        </div>
+      </div>
+
+      <div className="weekly-activity">
+        <div className="weekly-activity-header">
+          <div>
+            <h3>Weekly Activity</h3>
+            <p>Analyses completed during the last 7 days</p>
+          </div>
+
+          <strong>{dashboardStats.last_7_days_total ?? 0} total</strong>
+        </div>
+
+        <div className="weekly-chart">
+          {weeklyActivity.map(([date, count]) => (
+            <div className="weekly-chart-item" key={date}>
+              <div className="weekly-chart-value">{count}</div>
+
+              <div className="weekly-chart-track">
+                <div
+                  className="weekly-chart-bar"
+                  style={{
+                    height: `${Math.max(
+                      count > 0 ? 12 : 2,
+                      (count / maxWeeklyCount) * 100,
+                    )}%`,
+                  }}
+                />
+              </div>
+
+              <span>
+                {new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+                  weekday: 'short',
+                })}
+              </span>
+
+              <small>{date.slice(5)}</small>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   )}

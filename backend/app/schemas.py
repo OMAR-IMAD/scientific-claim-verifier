@@ -269,6 +269,9 @@ class DashboardStatsResponse(BaseModel):
     entailment_percentage: float
     contradiction_percentage: float
     neutral_percentage: float
+    today_total: int = 0
+    last_7_days_total: int = 0
+    daily_counts: dict[str, int] = Field(default_factory=dict)
 
 class FileUploadResponse(BaseModel):
     """Response returned after extracting text from an uploaded file."""

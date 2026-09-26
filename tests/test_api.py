@@ -1141,14 +1141,17 @@ def test_dashboard_stats_endpoint_returns_current_user_stats(
     """Return dashboard statistics for the authenticated user."""
 
     stats = {
-        "total": 4,
-        "ENTAILMENT": 2,
-        "CONTRADICTION": 1,
-        "NEUTRAL": 1,
-        "entailment_percentage": 50.0,
-        "contradiction_percentage": 25.0,
-        "neutral_percentage": 25.0,
-    }
+    "total": 4,
+    "ENTAILMENT": 2,
+    "CONTRADICTION": 1,
+    "NEUTRAL": 1,
+    "entailment_percentage": 50.0,
+    "contradiction_percentage": 25.0,
+    "neutral_percentage": 25.0,
+    "today_total": 0,
+    "last_7_days_total": 0,
+    "daily_counts": {},
+}
 
     requested_user_id: dict[str, int] = {}
 

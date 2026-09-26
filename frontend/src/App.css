@@ -804,3 +804,153 @@ textarea {
     font-size: 12px;
   }
 }
+
+/* Day 67 - Dashboard Weekly Statistics */
+
+.dashboard-period-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.dashboard-period-card {
+  padding: 18px 20px;
+  border: 1px solid #31415a;
+  border-radius: 14px;
+  background: #121f34;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashboard-period-card span {
+  color: #9ca9bd;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dashboard-period-card strong {
+  color: #ffffff;
+  font-size: 28px;
+}
+
+.dashboard-period-card small {
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.weekly-activity {
+  margin-top: 18px;
+  padding: 20px;
+  border: 1px solid #31415a;
+  border-radius: 14px;
+  background: #121f34;
+}
+
+.weekly-activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.weekly-activity-header h3 {
+  margin: 0 0 5px;
+  color: #ffffff;
+  font-size: 18px;
+}
+
+.weekly-activity-header p {
+  margin: 0;
+  color: #9ca9bd;
+  font-size: 13px;
+}
+
+.weekly-activity-header > strong {
+  color: #60a5fa;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.weekly-chart {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.weekly-chart-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.weekly-chart-value {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.weekly-chart-track {
+  width: 100%;
+  max-width: 42px;
+  height: 130px;
+  padding: 3px;
+  border-radius: 8px;
+  background: #243249;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.weekly-chart-bar {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 6px;
+  background: #2f6fed;
+  transition: height 0.3s ease;
+}
+
+.weekly-chart-item span {
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.weekly-chart-item small {
+  color: #7f8da3;
+  font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .dashboard-period-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .weekly-activity-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .weekly-chart {
+    gap: 5px;
+  }
+
+  .weekly-chart-track {
+    height: 100px;
+    max-width: 30px;
+  }
+
+  .weekly-chart-item span {
+    font-size: 10px;
+  }
+
+  .weekly-chart-item small {
+    font-size: 9px;
+  }
+}
