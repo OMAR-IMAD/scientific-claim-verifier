@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
-from backend.app.database import get_db
+from backend.app.database import Base, engine, get_db
 from backend.app.crud import (
     create_analysis,
     create_user,
@@ -52,6 +52,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
