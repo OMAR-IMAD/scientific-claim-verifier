@@ -520,25 +520,39 @@ const sortedAnalysisHistory = [...filteredAnalysisHistory].sort((a, b) => {
   return bDate - aDate
 })
 
-  const mostCommonPrediction =
-    dashboardStats && dashboardStats.total > 0
-      ? [
-          {
-            label: 'Entailment',
-            value: dashboardStats.ENTAILMENT,
-          },
-          {
-            label: 'Neutral',
-            value: dashboardStats.NEUTRAL,
-          },
-          {
-            label: 'Contradiction',
-            value: dashboardStats.CONTRADICTION,
-          },
-        ].reduce((mostCommon, item) =>
-          item.value > mostCommon.value ? item : mostCommon
-        ).label
-      : 'No Data'
+  const predictionCounts =
+  dashboardStats && dashboardStats.total > 0
+    ? [
+        {
+          label: 'Entailment',
+          value: dashboardStats.ENTAILMENT,
+        },
+        {
+          label: 'Neutral',
+          value: dashboardStats.NEUTRAL,
+        },
+        {
+          label: 'Contradiction',
+          value: dashboardStats.CONTRADICTION,
+        },
+      ]
+    : []
+
+const maxPredictionCount =
+  predictionCounts.length > 0
+    ? Math.max(...predictionCounts.map((item) => item.value))
+    : 0
+
+const topPredictions = predictionCounts.filter(
+  (item) => item.value === maxPredictionCount,
+)
+
+const mostCommonPrediction =
+  predictionCounts.length === 0
+    ? 'No Data'
+    : topPredictions.length > 1
+      ? 'Tie'
+      : topPredictions[0].label
 
   const weeklyActivity = dashboardStats?.daily_counts
     ? Object.entries(dashboardStats.daily_counts)
