@@ -6,7 +6,7 @@ Scientific Claim Verifier: NLI-Based Fact-Checking Platform
 
 
 
-Öğrenci Adi : OMAR IMAD ISMEL AL-HADEETHI
+Öğrenci Adı : OMAR IMAD ISMAEL AL-HADEETHI
 
 Öğrenci NO : 220206919 
 
@@ -1158,5 +1158,3 @@ Repository içerisinde aşağıdaki temel proje bileşenleri bulunmaktadır:
 
 
 Proje geliştirme süreci boyunca yapılan değişiklikler Git üzerinden takip edilmiş ve düzenli olarak GitHub repository içerisine gönderilmiştir.
-
-
